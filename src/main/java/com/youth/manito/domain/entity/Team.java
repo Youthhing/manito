@@ -1,11 +1,9 @@
 package com.youth.manito.domain.entity;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,7 +20,4 @@ public class Team {
     private String name;
 
     private String code;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private User admin;
 }
