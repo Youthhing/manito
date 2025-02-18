@@ -16,4 +16,9 @@ public class TeamReader {
         return teamRepository.findByCode(code)
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 팀입니다."));
     }
+
+    public Team getById(final Long teamId) {
+        return teamRepository.findById(teamId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 팀입니다."));
+    }
 }
