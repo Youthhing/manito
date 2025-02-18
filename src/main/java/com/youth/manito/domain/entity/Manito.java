@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,4 +32,28 @@ public class Manito {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id")
     private User receiver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manito_group")
+    private ManitoGroup manitoGroup;
+
+    @Builder(access = AccessLevel.PRIVATE)
+    private Manito(Mission mission, User giver, User receiver, ManitoGroup manitoGroup) {
+        this.mission = mission;
+        this.giver = giver;
+        this.receiver = receiver;
+        this.manitoGroup = manitoGroup;
+    }
+
+    public static Manito of(final User giver, final User receiver, final ManitoGroup manitoGroup) {
+        return Manito.builder()
+                .giver(giver)
+                .receiver(receiver)
+                .manitoGroup(manitoGroup)
+                .build();
+    }
+
+    public void assignMission(final Mission mission) {
+        this.mission = mission;
+    }
 }

@@ -23,4 +23,12 @@ public class ManitoGroup {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id")
     private Team team;
+
+    private ManitoGroup(Team team) {
+        this.team = team;
+    }
+
+    public static ManitoGroup of(final Team team) {
+        return new ManitoGroup(team);
+    }
 }
