@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>신승유기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        /* 가로 가운데 정렬을 위한 컨테이너 */
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center; /* 내부 콘텐츠 가운데 정렬 */
+        }
+        .team-info {
+            margin-bottom: 1.2rem;
+        }
+        .team-name {
+            font-size: 1.2rem;
+            margin-top: 0.3rem;
+            display: block;
+        }
+        button {
+            padding: 0.7rem 1.5rem;
+            background-color: #28a745;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <form th:action="@{/sendTeam}" method="post">
+        <div class="team-info">
+            <label>팀 이름</label>
+            <br>
+            <!-- TeamResponse 객체의 name 필드를 출력 -->
+            <span class="team-name" th:text="${team.name}">팀 이름</span>
+            <!-- 폼 전송 시 함께 보내기 위한 hidden input -->
+            <input type="hidden" name="teamName" th:value="${team.name}" />
+        </div>
+        <div>
+            <button type="submit">발송하기</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>
