@@ -16,7 +16,7 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: center; /* 내부 콘텐츠 가운데 정렬 */
+            text-align: center;
         }
         .team-info {
             margin-bottom: 1.2rem;
@@ -42,13 +42,14 @@
 </head>
 <body>
 <div class="container">
-    <form th:action="@{/sendTeam}" method="post">
+    <!-- team.id를 URL 변수로 바인딩하여 호출 -->
+    <form id="manitoForm" th:action="@{/api/teams/{id}/manitoes(id=${team.id})}" method="post">
         <div class="team-info">
             <label>팀 이름</label>
             <br>
             <!-- TeamResponse 객체의 name 필드를 출력 -->
             <span class="team-name" th:text="${team.name}">팀 이름</span>
-            <!-- 폼 전송 시 함께 보내기 위한 hidden input -->
+            <!-- 필요하다면 hidden input으로 teamName 전달 -->
             <input type="hidden" name="teamName" th:value="${team.name}" />
         </div>
         <div>
@@ -56,5 +57,32 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.getElementById("manitoForm").addEventListener("submit", function(event) {
+        event.preventDefault(); // 폼의 기본 제출 동작 방지
+
+        const form = event.target;
+        const url = form.action;
+        const formData = new FormData(form);
+
+        fetch(url, {
+            method: "POST",
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    // 응답 성공 시 팝업 띄우기
+                    alert("발송 완료!");
+                } else {
+                    alert("발송 실패! 오류: " + response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("발송 실패! 오류가 발생했습니다.");
+            });
+    });
+</script>
 </body>
 </html>
