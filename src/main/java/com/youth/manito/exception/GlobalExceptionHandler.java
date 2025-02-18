@@ -17,4 +17,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("EntityNotFoundException 발생: {}", e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(ExceptionResponse.of(e.getMessage()));
     }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ExceptionResponse> handleBadRequestException(BadRequestException e) {
+        log.warn("BadRequestException 발생: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value()).body(ExceptionResponse.of(e.getMessage()));
+    }
 }
