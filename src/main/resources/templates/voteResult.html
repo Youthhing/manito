@@ -75,7 +75,7 @@
                 // "결과 보러가기" 링크 생성
                 // (여기서는 예시로 /vote/result/detail?userId=... 로 연결)
                 var resultLink = document.createElement("a");
-                resultLink.href = "/vote/result/detail?userId=" + user.id;
+                resultLink.href = "/manito/result/receiver/" + user.id;
                 resultLink.textContent = "결과 보러가기";
 
                 memberDiv.appendChild(nameSpan);

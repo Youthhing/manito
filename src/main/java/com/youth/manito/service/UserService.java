@@ -35,4 +35,8 @@ public class UserService {
                 .toList();
         return TeamUserResponse.of(team, users);
     }
+
+    public UserResponse getById(Long userId) {
+        return UserResponse.from(userReader.getById(userId));
+    }
 }

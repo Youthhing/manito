@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>투표 결과 상세보기</title>
+    <!-- 모바일 반응형을 위한 뷰포트 설정 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .result-header {
+            margin-bottom: 20px;
+        }
+        .result-header p {
+            font-size: 20px;
+        }
+        .mission {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f0f0f0;
+        }
+        /* 미디어 쿼리: 화면 폭 600px 이하일 때 */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 20px;
+            }
+            .result-header p {
+                font-size: 16px;
+            }
+            .mission {
+                font-size: 14px;
+                padding: 8px;
+            }
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 제목: 결과의 receiverName을 포함 (초기 기본값은 비워둡니다) -->
+    <h1 id="pageTitle">투표 결과 상세보기</h1>
+
+    <!-- 매칭 결과 표시: (receiver)의 마니또는 (giver) 입니다. -->
+    <div class="result-header">
+        <p>
+            <span id="receiverName">[receiver]</span>님의 마니또는
+            <strong id="giverName">[giver]</strong> 입니다.
+        </p>
+    </div>
+
+    <!-- 미션 내용 -->
+    <div class="mission">
+        <p>
+            <strong>미션:</strong>
+            <span id="missionContent">미션 내용이 추후 호출됩니다.</span>
+        </p>
+    </div>
+</div>
+
+<!-- Thymeleaf 인라인 스크립트를 통해 teamId와 receiverId를 자바스크립트 변수에 설정 -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var teamId = /*[[${user.teamId}]]*/ 0;
+    var receiverId = /*[[${user.id}]]*/ 0;
+    /*]]>*/
+</script>
+
+<script>
+    // API 호출: /api/teams/{teamId}/manito-groups/vote/results?receiverId={receiverId}
+    fetch("/api/teams/" + teamId + "/manito-groups/vote/results?receiverId=" + receiverId)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error("API 호출 실패");
+            }
+            return response.json();
+        })
+        .then(function(result) {
+            // API 응답으로 받은 데이터를 이용해 페이지 업데이트
+            document.getElementById("pageTitle").innerText = result.receiverName + "님의 투표 결과 상세보기";
+            document.getElementById("receiverName").innerText = result.receiverName;
+            document.getElementById("giverName").innerText = result.giverName;
+            document.getElementById("missionContent").innerText = result.missionContent;
+        })
+        .catch(function(error) {
+            console.error("결과 API 호출 중 오류:", error);
+        });
+</script>
+</body>
+</html>
