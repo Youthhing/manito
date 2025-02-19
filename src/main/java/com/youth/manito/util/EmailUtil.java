@@ -22,7 +22,7 @@ public class EmailUtil {
             + "    </style>\n"
             + "</head>\n";
 
-    public static String getMatchManitoMessageBody(final Manito manito) {
+    public static String getMatchManitoMessageBody(final Manito manito, final String voteLink) {
         return "<!DOCTYPE html>\n"
                 + BASE_HEADER
                 + "<body>\n"
@@ -43,11 +43,12 @@ public class EmailUtil {
                 + "            <p> 질문: " + manito.getMission().getContents() + " </p>\n"
                 + "        </div>\n"
                 + "        <div class=\"button-container\">\n"
-                + "            <a href=\"http://your-vote-link.com\" class=\"button\">투표하러가기</a>\n"
+                + "            <a href=\""+ voteLink + "?giverEmail=" + manito.getGiver().getEmail() +"\" class=\"button\">투표하러가기</a>\n"
                 + "        </div>\n"
                 + "    </div>\n"
                 + "    <div class=\"footer\">© 신승유기 - All rights reserved.</div>\n"
                 + "</body>\n"
                 + "</html>";
+
     }
 }

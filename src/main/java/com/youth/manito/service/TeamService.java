@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,9 @@ public class TeamService {
     private final ManitoRepository manitoRepository;
 
     private final EmailSender emailSender;
+
+    @Value("${vote.link}")
+    private String voteLink;
 
     public TeamResponse getByCode(final String code) {
         return TeamResponse.of(teamReader.getByCode(code));
@@ -69,7 +73,7 @@ public class TeamService {
         manitoGroupRepository.save(manitoGroup);
         manitoRepository.saveAll(manitos);
 
-        manitos.forEach(manito -> emailSender.sendEmail(manito.getGiver(), EmailUtil.getMatchManitoMessageBody(manito) , EmailUtil.MATCH_MANITO_SUBJECT));
+        manitos.forEach(manito -> emailSender.sendEmail(manito.getGiver(), EmailUtil.getMatchManitoMessageBody(manito, voteLink) , EmailUtil.MATCH_MANITO_SUBJECT));
     }
 
     public Map<User, User> matchManito(final List<User> users) {
