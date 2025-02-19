@@ -56,6 +56,11 @@
         .vote-list li:last-child {
             border-bottom: none;
         }
+        .reveal-rate {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
         /* 반응형 스타일 */
         @media (max-width: 600px) {
             h1 { font-size: 20px; }
@@ -89,6 +94,10 @@
             <!-- 각 투표 결과 항목이 동적으로 추가됩니다. -->
         </ul>
     </div>
+    <div class="reveal-rate" id="revealRate">
+        <!-- 나중에 JS에서 업데이트됩니다 -->
+    </div>
+
 </div>
 
 <!-- Thymeleaf 인라인 스크립트를 통해 teamId와 receiverId를 설정 -->
@@ -100,6 +109,7 @@
 </script>
 
 <script>
+    // API 호출: 매칭 결과 API (예: /api/teams/{teamId}/manito-groups/manito?receiverId={receiverId})
     fetch("/api/teams/" + teamId + "/manito-groups/manito?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
@@ -107,15 +117,16 @@
             }
             return response.json();
         })
-        .then(function (result) {
+        .then(function(result) {
             document.getElementById("receiverName").innerText = result.receiverName;
             document.getElementById("giverName").innerText = result.giverName;
             document.getElementById("missionContent").innerText = result.missionContent;
         })
-        .catch(function (error) {
+        .catch(function(error) {
             console.error("매칭 결과 API 호출 중 오류:", error);
         });
 
+    // API 호출: 투표 결과 API (예: /api/teams/{teamId}/manito-groups/vote/results?receiverId={receiverId})
     fetch("/api/teams/" + teamId + "/manito-groups/vote/results?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
@@ -127,25 +138,42 @@
             // 결과 상단 업데이트
             document.getElementById("pageTitle").innerText = result.receiverName + "님의 투표 결과 상세보기";
             document.getElementById("receiverName").innerText = result.receiverName;
-            // 대표 giverName는 투표 결과의 첫번째 항목에서 가져옴 (투표 결과가 있을 경우)
             if (result.votes && result.votes.length > 0) {
                 document.getElementById("giverName").innerText = result.votes[0].giver.userName;
             } else {
                 document.getElementById("giverName").innerText = "[없음]";
             }
-
             // 투표 결과 목록 채우기
             var voteList = document.getElementById("voteList");
             result.votes.forEach(function(vote) {
                 var li = document.createElement("li");
-                // 형식: "voterName(voter): (receiver)의 마니또로 (giver)를 선택했습니다."
                 li.innerText = vote.voterName + "(voter): " + result.receiverName + "의 마니또로 " + vote.giver.userName + "를 선택했습니다.";
                 voteList.appendChild(li);
             });
         })
         .catch(function(error) {
-            console.error("결과 API 호출 중 오류:", error);
+            console.error("투표 결과 API 호출 중 오류:", error);
         });
+
+    // API 호출: 들킴률 API (예: 호출할 API 엔드포인트는 추후 알려줌)
+    // 예시로 /api/teams/{teamId}/manito-groups/vote/revealRate?receiverId={receiverId} 사용
+    fetch("/api/teams/" + teamId + "/manito-groups/vote/revealRate?receiverId=" + receiverId)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error("API 호출 실패");
+            }
+            return response.json();
+        })
+        .then(function(rate) {
+            // 기존에 업데이트한 요소에서 giverName과 receiverName을 가져옵니다.
+            document.getElementById("revealRate").innerText =
+                document.getElementById("giverName").innerText + "은 총 " + rate.denominator + " 중 " + rate.numerator +
+                " 명에게 " + document.getElementById("receiverName").innerText + "의 마니또임이 발각되었습니다.";
+        })
+        .catch(function(error) {
+            console.error("들킴률 API 호출 중 오류:", error);
+        });
+
 </script>
 </body>
 </html>
