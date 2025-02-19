@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>투표 결과</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .team-member {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .team-member:last-child {
+            border-bottom: none;
+        }
+        .team-member a {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+        }
+        .team-member a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 팀 이름을 제목에 표시 -->
+    <h1 th:text="${team.name} + ' 투표 결과'">투표 결과</h1>
+    <!-- 팀원 목록을 채울 컨테이너 -->
+    <div id="teamMembersContainer">
+        <!-- 예: 팀원 이름 : 결과 보러가기 -->
+    </div>
+</div>
+
+<!-- Thymeleaf 인라인 스크립트를 사용하여 팀 id를 자바스크립트 변수에 넣어줍니다 -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var teamId = /*[[${team.id}]]*/ 0;
+    /*]]>*/
+</script>
+<script>
+    // API 호출: /api/users?teamId={teamId} (응답: TeamUserResponse 객체)
+    fetch("/api/users?teamId=" + teamId)
+        .then(response => response.json())
+        .then(function(data) {
+            var container = document.getElementById("teamMembersContainer");
+            // data.users는 팀원 배열 (각 팀원: { id, email, name, teamId })
+            data.users.forEach(function(user) {
+                // 팀원 한 명에 대한 행 생성
+                var memberDiv = document.createElement("div");
+                memberDiv.className = "team-member";
+
+                // 팀원 이름 표시
+                var nameSpan = document.createElement("span");
+                nameSpan.textContent = user.name;
+
+                // "결과 보러가기" 링크 생성
+                // (여기서는 예시로 /vote/result/detail?userId=... 로 연결)
+                var resultLink = document.createElement("a");
+                resultLink.href = "/vote/result/detail?userId=" + user.id;
+                resultLink.textContent = "결과 보러가기";
+
+                memberDiv.appendChild(nameSpan);
+                memberDiv.appendChild(resultLink);
+
+                container.appendChild(memberDiv);
+            });
+        })
+        .catch(function(error) {
+            console.error("팀원 목록을 불러오는 중 오류 발생:", error);
+        });
+</script>
+</body>
+</html>
