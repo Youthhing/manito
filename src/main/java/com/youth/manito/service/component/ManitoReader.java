@@ -6,6 +6,7 @@ import com.youth.manito.domain.entity.Team;
 import com.youth.manito.domain.entity.User;
 import com.youth.manito.domain.repository.ManitoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,5 +22,9 @@ public class ManitoReader {
         ManitoGroup manitoGroup = manitoGroupReader.getByTeam(team);
         return manitoRepository.findByManitoGroupAndReceiver(manitoGroup, receiver)
                 .orElseThrow(() -> new EntityNotFoundException("해당 팀과 유저에 대한 매니또 정보가 없습니다."));
+    }
+
+    public List<Manito> getByManitoGroup(final ManitoGroup manitoGroup) {
+        return manitoRepository.findAllByManitoGroup(manitoGroup);
     }
 }

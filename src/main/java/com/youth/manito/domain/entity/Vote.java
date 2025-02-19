@@ -1,5 +1,6 @@
 package com.youth.manito.domain.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +33,9 @@ public class Vote {
     @JoinColumn(name = "user_vote_group_id")
     private UserVoteGroup userVoteGroup;
 
+    @Column(name = "result")
+    private boolean result;
+
     private Vote(User giver, User receiver, UserVoteGroup userVoteGroup) {
         this.giver = giver;
         this.receiver = receiver;
@@ -40,5 +44,9 @@ public class Vote {
 
     public static Vote of(User giver, User receiver, UserVoteGroup userVoteGroup) {
         return new Vote(giver, receiver, userVoteGroup);
+    }
+
+    public void correct() {
+        this.result = true;
     }
 }

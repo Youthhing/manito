@@ -16,6 +16,7 @@ import com.youth.manito.service.component.ManitoGroupReader;
 import com.youth.manito.service.component.ManitoReader;
 import com.youth.manito.service.component.TeamReader;
 import com.youth.manito.service.component.UserReader;
+import com.youth.manito.service.component.VoteChecker;
 import com.youth.manito.service.component.VoteReader;
 import java.util.Comparator;
 import java.util.List;
@@ -39,6 +40,8 @@ public class ManitoGroupService {
     private final ManitoGroupReader manitoGroupReader;
 
     private final VoteReader voteReader;
+
+    private final VoteChecker voteChecker;
 
     private final UserVoteGroupRepository userVoteGroupRepository;
 
@@ -77,6 +80,10 @@ public class ManitoGroupService {
         userVoteGroup.updateSubmitted(submitted);
         userVoteGroup.updateVotes(votes);
         voteRepository.saveAll(votes);
+
+        if (submitted) {
+            voteChecker.gradeVotes(votes, manitoGroup);
+        }
     }
 
     private void checkTeam(User user, Team team) {
