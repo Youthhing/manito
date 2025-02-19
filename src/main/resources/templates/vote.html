@@ -138,15 +138,17 @@
                 });
             }
         });
-        return {
-            userId: currentUser.id,
-            votes: votes
-        };
+        return votes;
     }
 
     // PUT 요청으로 vote 데이터를 전송하는 함수
     function sendVote(actionType) {
-        const payload = collectVoteData();
+        const votes = collectVoteData();
+        const payload = {
+            userId: currentUser.id,
+            submitted: (actionType === 'submit'),
+            votes: votes
+        };
         const endpoint = "/api/teams/" + currentUser.teamId + "/manito-groups/vote";
 
         fetch(endpoint, {
@@ -157,14 +159,19 @@
             body: JSON.stringify(payload)
         })
             .then(response => {
-                if(response.ok) {
-                    if(actionType === 'temp') {
+                if (response.ok) {
+                    if (actionType === 'temp') {
                         alert("임시저장 완료!");
                     } else {
                         alert("투표 제출 완료!");
                     }
                 } else {
-                    alert("오류가 발생했습니다. 다시 시도해주세요.");
+                    // 오류 응답이 JSON 형식이라고 가정
+                    response.json().then(errorData => {
+                        alert(errorData.message || "오류가 발생했습니다. 다시 시도해주세요.");
+                    }).catch(() => {
+                        alert("오류가 발생했습니다. 다시 시도해주세요.");
+                    });
                 }
             })
             .catch(error => {
@@ -173,16 +180,17 @@
             });
     }
 
-    // 버튼 이벤트 리스너 등록
+    // 임시저장 버튼 이벤트 리스너 등록
     document.getElementById("tempSaveBtn").addEventListener("click", function() {
         sendVote('temp');
     });
+
+    // 투표 제출 버튼 이벤트 리스너 등록 (확인 팝업 추가)
     document.getElementById("submitVoteBtn").addEventListener("click", function() {
         if (confirm("제출하면 더이상 수정이 불가능합니다. 진짜 제출하시겠습니까?")) {
             sendVote('submit');
         }
     });
-
 </script>
 </body>
 </html>
