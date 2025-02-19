@@ -40,7 +40,7 @@ public class EmailUtil {
                 + "        <div class=\"section\">\n"
                 + "            <strong>미션</strong><br>\n"
                 + "            - 게임 종료까지 <strong>" + manito.getReceiver().getName() + "</strong>님께 아래 질문을 티나지 않게 해주세요!\n"
-                + "            <p>" + manito.getMission().getContents() + "</p>\n"
+                + "            <p> 질문: " + manito.getMission().getContents() + " </p>\n"
                 + "        </div>\n"
                 + "        <div class=\"button-container\">\n"
                 + "            <a href=\"http://your-vote-link.com\" class=\"button\">투표하러가기</a>\n"
