@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface MissionRepository extends JpaRepository<Mission, Long> {
 
-    @Query("SELECT m.id FROM Mission m")
-    List<Long> findAllMissionIds();
+    @Query("SELECT m.id FROM Mission m where m.deleted = false")
+    List<Long> findAllMissionIdsDeletedFalse();
 
     List<Mission> findByIdIn(List<Long> ids);
 }

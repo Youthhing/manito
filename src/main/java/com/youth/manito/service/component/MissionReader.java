@@ -23,7 +23,7 @@ public class MissionReader {
             throw new BadRequestException("요청한 미션 개수가 존재하는 미션 개수보다 많습니다.");
         }
 
-        List<Long> missionIds = missionRepository.findAllMissionIds();
+        List<Long> missionIds = missionRepository.findAllMissionIdsDeletedFalse();
 
         Collections.shuffle(missionIds);
         List<Long> selectedIds = missionIds.stream()
