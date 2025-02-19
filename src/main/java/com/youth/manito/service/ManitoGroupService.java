@@ -1,6 +1,7 @@
 package com.youth.manito.service;
 
 import com.youth.manito.controller.dto.ManitoResponse;
+import com.youth.manito.controller.dto.ManitoVoteResultResponse;
 import com.youth.manito.controller.dto.VoteManitoRequest;
 import com.youth.manito.domain.entity.ManitoGroup;
 import com.youth.manito.domain.entity.Team;
@@ -11,9 +12,12 @@ import com.youth.manito.domain.repository.ManitoGroupRepository;
 import com.youth.manito.domain.repository.UserVoteGroupRepository;
 import com.youth.manito.domain.repository.VoteRepository;
 import com.youth.manito.exception.BadRequestException;
+import com.youth.manito.service.component.ManitoGroupReader;
 import com.youth.manito.service.component.ManitoReader;
 import com.youth.manito.service.component.TeamReader;
 import com.youth.manito.service.component.UserReader;
+import com.youth.manito.service.component.VoteReader;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -31,6 +35,10 @@ public class ManitoGroupService {
     private final UserReader userReader;
 
     private final ManitoReader manitoReader;
+
+    private final ManitoGroupReader manitoGroupReader;
+
+    private final VoteReader voteReader;
 
     private final UserVoteGroupRepository userVoteGroupRepository;
 
@@ -82,5 +90,17 @@ public class ManitoGroupService {
         User receiver = userReader.getById(receiverId);
 
         return ManitoResponse.from(manitoReader.getByTeamAndReceiver(team, receiver));
+    }
+
+    public ManitoVoteResultResponse getManitoResults(final Long teamId, final Long receiverId) {
+        Team team = teamReader.getById(teamId);
+        User receiver = userReader.getById(receiverId);
+        ManitoGroup manitoGroup = manitoGroupReader.getByTeam(team);
+
+        List<UserVoteGroup> userVoteGroups = userVoteGroupRepository.findAllByManitoGroup(manitoGroup);
+        List<Vote> votes = voteReader.getAllByUserVoteGroups(userVoteGroups, receiver);
+        votes.sort(Comparator.comparing(vote -> !vote.getUserVoteGroup().getUser().getId().equals(receiver.getId())));
+
+        return ManitoVoteResultResponse.of(manitoGroup, receiver, votes);
     }
 }
