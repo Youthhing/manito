@@ -96,4 +96,8 @@ public class TeamService {
         }
         return matchResult;
     }
+
+    public TeamResponse getById(final Long teamId) {
+        return TeamResponse.of(teamReader.getById(teamId));
+    }
 }
