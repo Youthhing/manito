@@ -5,15 +5,14 @@ import com.youth.manito.domain.entity.UserVoteGroup;
 import com.youth.manito.domain.entity.Vote;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public record UserVoteGroupResponse(
         Long voterId,
         String voterName,
-
         UserVoteResult giver,
-        UserVoteResult receiver
+        UserVoteResult receiver,
+        boolean isCorrect
 ) {
 
     public static UserVoteGroupResponse from(final Vote vote) {
@@ -22,7 +21,8 @@ public record UserVoteGroupResponse(
                 userVoteGroup.getUser().getId(),
                 userVoteGroup.getUser().getName(),
                 UserVoteResult.from(vote.getGiver()),
-                UserVoteResult.from(vote.getReceiver())
+                UserVoteResult.from(vote.getReceiver()),
+                vote.isResult()
         );
     }
 
