@@ -6,6 +6,7 @@ import com.youth.manito.domain.entity.Team;
 import com.youth.manito.domain.entity.User;
 import com.youth.manito.domain.entity.UserVoteGroup;
 import com.youth.manito.domain.entity.Vote;
+import com.youth.manito.domain.repository.ManitoGroupRepository;
 import com.youth.manito.domain.repository.UserVoteGroupRepository;
 import com.youth.manito.domain.repository.VoteRepository;
 import com.youth.manito.exception.BadRequestException;
@@ -31,14 +32,19 @@ public class ManitoGroupService {
 
     private final VoteRepository voteRepository;
 
+    private final ManitoGroupRepository manitoGroupRepository;
+
     @Transactional
     public void voteManitoResults(final Long teamId, final Long userId, final boolean submitted, final List<VoteManitoRequest> voteRequest) {
         Team team = teamReader.getById(teamId);
         User user = userReader.getById(userId);
         checkTeam(user, team);
 
+        ManitoGroup manitoGroup = manitoGroupRepository.findByTeam(team).orElseGet(() -> ManitoGroup.of(team));
+        manitoGroupRepository.save(manitoGroup);
+
         UserVoteGroup userVoteGroup = userVoteGroupRepository.findByUserId(userId)
-                .orElseGet(() -> userVoteGroupRepository.save(UserVoteGroup.of(user, ManitoGroup.of(team))));
+                .orElseGet(() -> userVoteGroupRepository.save(UserVoteGroup.of(user, manitoGroup)));
 
         if (userVoteGroup.isSubmitted()) {
             throw new BadRequestException("이미 투표를 완료했습니다.");
