@@ -31,8 +31,12 @@
             padding: 8px;
             font-size: 1em;
         }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
         button {
-            background-color: #28a745;
             border: none;
             color: white;
             padding: 10px 20px;
@@ -40,16 +44,25 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        button#submitVoteBtn {
+            background-color: #28a745;
+        }
+        button#tempSaveBtn {
+            background-color: #ffc107;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- 제목에 팀명이 들어가도록 기본 텍스트는 변경될 예정 -->
+    <!-- 제목에 팀명이 들어가도록 업데이트 -->
     <h1>마니또 투표</h1>
-    <form id="voteForm" th:action="@{/submitVote}" method="post">
+    <form id="voteForm">
         <!-- 동적으로 팀원 드롭다운을 채울 컨테이너 -->
         <div id="manitoContainer"></div>
-        <button type="submit">투표 제출</button>
+        <div class="btn-group">
+            <button type="button" id="tempSaveBtn">임시저장</button>
+            <button type="button" id="submitVoteBtn">투표 제출</button>
+        </div>
     </form>
 </div>
 
@@ -61,32 +74,31 @@
 </script>
 
 <script>
-    // 팀원 목록 API 호출 (응답은 { teamId, teamName, users: [...] } 형태)
+    // 팀원 목록 API 호출 (응답은 TeamUserResponse: { teamId, teamName, users: [...] })
     fetch("/api/users?teamId=" + currentUser.teamId)
         .then(response => response.json())
         .then(function(teamResponse) {
-            const container = document.getElementById("manitoContainer");
-
-            // 제목에 팀명을 반영: 예) "신승유기 마니또 투표"
+            // 제목 업데이트: 예) "신승유기 마니또 투표"
             document.querySelector("h1").textContent = teamResponse.teamName + " 마니또 투표";
 
-            // teamResponse.users를 순회하여 각 팀원별 드롭다운 생성
+            const container = document.getElementById("manitoContainer");
             teamResponse.users.forEach(function(member) {
                 const div = document.createElement("div");
                 div.className = "team-member";
 
-                // 라벨 생성: 현재 사용자이면 "내 마니또는", 그 외는 "팀원명 의 마니또는"
+                // 라벨: 현재 사용자면 "내 마니또는", 그 외는 "OO의 마니또는"
                 const label = document.createElement("label");
                 label.textContent = (member.id === currentUser.id)
                     ? "내 마니또는"
                     : member.name + "의 마니또는";
                 div.appendChild(label);
 
-                // select 요소 생성, name 속성은 "manitoMapping[팀원ID]" 형식
+                // select 요소 생성 (각 select에 data-giver-id 속성 추가)
                 const select = document.createElement("select");
                 select.name = "manitoMapping[" + member.id + "]";
+                select.setAttribute("data-giver-id", member.id);
 
-                // 기본 옵션 추가
+                // 기본 옵션
                 const defaultOption = document.createElement("option");
                 defaultOption.value = "";
                 defaultOption.disabled = true;
@@ -94,7 +106,7 @@
                 defaultOption.textContent = "선택하세요";
                 select.appendChild(defaultOption);
 
-                // 옵션: 같은 팀원의 목록에서 자기 자신은 제외
+                // 옵션: 팀원 목록에서 자기 자신은 제외
                 teamResponse.users
                     .filter(optionMember => optionMember.id !== member.id)
                     .forEach(function(optionMember) {
@@ -111,6 +123,63 @@
         .catch(function(error) {
             console.error("팀원 목록을 불러오는 중 오류 발생:", error);
         });
+
+    // 폼의 드롭다운 데이터를 수집하여 VoteManitoGroupRequest DTO 형식의 객체로 구성
+    function collectVoteData() {
+        const votes = [];
+        const selects = document.querySelectorAll("#manitoContainer select");
+        selects.forEach(function(select) {
+            const giverId = parseInt(select.getAttribute("data-giver-id"));
+            const receiverId = select.value ? parseInt(select.value) : null;
+            if(receiverId) { // 선택된 경우에만 추가
+                votes.push({
+                    giverId: giverId,
+                    receiverId: receiverId
+                });
+            }
+        });
+        return {
+            userId: currentUser.id,
+            votes: votes
+        };
+    }
+
+    // PUT 요청으로 vote 데이터를 전송하는 함수
+    function sendVote(actionType) {
+        const payload = collectVoteData();
+        const endpoint = "/api/teams/" + currentUser.teamId + "/manito-groups/vote";
+
+        fetch(endpoint, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(response => {
+                if(response.ok) {
+                    if(actionType === 'temp') {
+                        alert("임시저장 완료!");
+                    } else {
+                        alert("투표 제출 완료!");
+                    }
+                } else {
+                    alert("오류가 발생했습니다. 다시 시도해주세요.");
+                }
+            })
+            .catch(error => {
+                console.error("투표 전송 중 오류 발생:", error);
+                alert("오류가 발생했습니다. 다시 시도해주세요.");
+            });
+    }
+
+    // 버튼 이벤트 리스너 등록
+    document.getElementById("tempSaveBtn").addEventListener("click", function() {
+        sendVote('temp');
+    });
+    document.getElementById("submitVoteBtn").addEventListener("click", function() {
+        sendVote('submit');
+    });
 </script>
 </body>
 </html>
