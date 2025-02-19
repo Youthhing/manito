@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>마니또 투표</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .team-member {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #28a745;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 제목에 팀명이 들어가도록 기본 텍스트는 변경될 예정 -->
+    <h1>마니또 투표</h1>
+    <form id="voteForm" th:action="@{/submitVote}" method="post">
+        <!-- 동적으로 팀원 드롭다운을 채울 컨테이너 -->
+        <div id="manitoContainer"></div>
+        <button type="submit">투표 제출</button>
+    </form>
+</div>
+
+<!-- 현재 사용자 정보를 Thymeleaf를 통해 자바스크립트 변수에 넣어줍니다 -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var currentUser = /*[[${user}]]*/ {"id":0, "email":"", "name":"", "teamId":0};
+    /*]]>*/
+</script>
+
+<script>
+    // 팀원 목록 API 호출 (응답은 { teamId, teamName, users: [...] } 형태)
+    fetch("/api/users?teamId=" + currentUser.teamId)
+        .then(response => response.json())
+        .then(function(teamResponse) {
+            const container = document.getElementById("manitoContainer");
+
+            // 제목에 팀명을 반영: 예) "신승유기 마니또 투표"
+            document.querySelector("h1").textContent = teamResponse.teamName + " 마니또 투표";
+
+            // teamResponse.users를 순회하여 각 팀원별 드롭다운 생성
+            teamResponse.users.forEach(function(member) {
+                const div = document.createElement("div");
+                div.className = "team-member";
+
+                // 라벨 생성: 현재 사용자이면 "내 마니또는", 그 외는 "팀원명 의 마니또는"
+                const label = document.createElement("label");
+                label.textContent = (member.id === currentUser.id)
+                    ? "내 마니또는"
+                    : member.name + "의 마니또는";
+                div.appendChild(label);
+
+                // select 요소 생성, name 속성은 "manitoMapping[팀원ID]" 형식
+                const select = document.createElement("select");
+                select.name = "manitoMapping[" + member.id + "]";
+
+                // 기본 옵션 추가
+                const defaultOption = document.createElement("option");
+                defaultOption.value = "";
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                defaultOption.textContent = "선택하세요";
+                select.appendChild(defaultOption);
+
+                // 옵션: 같은 팀원의 목록에서 자기 자신은 제외
+                teamResponse.users
+                    .filter(optionMember => optionMember.id !== member.id)
+                    .forEach(function(optionMember) {
+                        const option = document.createElement("option");
+                        option.value = optionMember.id;
+                        option.textContent = optionMember.name;
+                        select.appendChild(option);
+                    });
+
+                div.appendChild(select);
+                container.appendChild(div);
+            });
+        })
+        .catch(function(error) {
+            console.error("팀원 목록을 불러오는 중 오류 발생:", error);
+        });
+</script>
+</body>
+</html>
