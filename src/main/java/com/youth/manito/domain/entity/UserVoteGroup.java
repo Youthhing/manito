@@ -56,4 +56,8 @@ public class UserVoteGroup {
         this.votes.clear();
         this.votes.addAll(votes);
     }
+
+    public void updateSubmitted(boolean submitted) {
+        this.submitted = submitted;
+    }
 }

@@ -20,7 +20,7 @@ public class ManitoGroupController {
     @PutMapping("/{id}/manito-groups/vote")
     public ResponseEntity<Void> voteManitoResults(@PathVariable("id") Long teamId,
                                                   @RequestBody VoteManitoGroupRequest request) {
-        manitoGroupService.voteManitoResults(teamId, request.userId(), request.votes());
+        manitoGroupService.voteManitoResults(teamId, request.userId(), request.submitted(), request.votes());
         return ResponseEntity.ok().build();
     }
 }

@@ -32,13 +32,17 @@ public class ManitoGroupService {
     private final VoteRepository voteRepository;
 
     @Transactional
-    public void voteManitoResults(final Long teamId, final Long userId, final List<VoteManitoRequest> voteRequest) {
+    public void voteManitoResults(final Long teamId, final Long userId, final boolean submitted, final List<VoteManitoRequest> voteRequest) {
         Team team = teamReader.getById(teamId);
         User user = userReader.getById(userId);
         checkTeam(user, team);
 
         UserVoteGroup userVoteGroup = userVoteGroupRepository.findByUserId(userId)
                 .orElseGet(() -> userVoteGroupRepository.save(UserVoteGroup.of(user, ManitoGroup.of(team))));
+
+        if (userVoteGroup.isSubmitted()) {
+            throw new BadRequestException("이미 투표를 완료했습니다.");
+        }
 
         List<Long> userIds = voteRequest.stream()
                 .map(vote -> List.of(vote.giverId(), vote.receiverId()))
@@ -52,6 +56,7 @@ public class ManitoGroupService {
                 .map(vote -> Vote.of(userById.get(vote.giverId()), userById.get(vote.receiverId()), userVoteGroup))
                 .toList();
 
+        userVoteGroup.updateSubmitted(submitted);
         userVoteGroup.updateVotes(votes);
         voteRepository.saveAll(votes);
     }
