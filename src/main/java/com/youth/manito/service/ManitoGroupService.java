@@ -1,5 +1,6 @@
 package com.youth.manito.service;
 
+import com.youth.manito.controller.dto.ManitoResultResponse;
 import com.youth.manito.controller.dto.VoteManitoRequest;
 import com.youth.manito.domain.entity.ManitoGroup;
 import com.youth.manito.domain.entity.Team;
@@ -10,6 +11,7 @@ import com.youth.manito.domain.repository.ManitoGroupRepository;
 import com.youth.manito.domain.repository.UserVoteGroupRepository;
 import com.youth.manito.domain.repository.VoteRepository;
 import com.youth.manito.exception.BadRequestException;
+import com.youth.manito.service.component.ManitoReader;
 import com.youth.manito.service.component.TeamReader;
 import com.youth.manito.service.component.UserReader;
 import java.util.List;
@@ -27,6 +29,8 @@ public class ManitoGroupService {
     private final TeamReader teamReader;
 
     private final UserReader userReader;
+
+    private final ManitoReader manitoReader;
 
     private final UserVoteGroupRepository userVoteGroupRepository;
 
@@ -71,5 +75,12 @@ public class ManitoGroupService {
         if (!team.getId().equals(user.getTeam().getId())) {
             throw new BadRequestException("유저의 팀이 아닙니다.");
         }
+    }
+
+    public ManitoResultResponse getManitoResults(final Long teamId, final Long receiverId) {
+        Team team = teamReader.getById(teamId);
+        User receiver = userReader.getById(receiverId);
+
+        return ManitoResultResponse.from(manitoReader.getByTeamAndReceiver(team, receiver));
     }
 }
