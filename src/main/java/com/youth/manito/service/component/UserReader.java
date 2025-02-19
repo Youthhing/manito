@@ -22,4 +22,13 @@ public class UserReader {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new EntityNotFoundException("해당하는 이메일이 없습니다."));
     }
+
+    public User getById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("해당하는 유저가 없습니다."));
+    }
+
+    public List<User> getAllByIds(List<Long> userIds) {
+        return userRepository.findAllById(userIds);
+    }
 }
