@@ -4,7 +4,7 @@ import com.youth.manito.domain.entity.Manito;
 import lombok.Builder;
 
 @Builder
-public record ManitoResultResponse(
+public record ManitoResponse(
         Long manitoId,
         Long receiverId,
         String receiverName,
@@ -13,8 +13,8 @@ public record ManitoResultResponse(
         Long missionId,
         String missionContent
 ) {
-    public static ManitoResultResponse from(final Manito manito) {
-        return ManitoResultResponse.builder()
+    public static ManitoResponse from(final Manito manito) {
+        return ManitoResponse.builder()
                 .manitoId(manito.getId())
                 .receiverId(manito.getReceiver().getId())
                 .receiverName(manito.getReceiver().getName())

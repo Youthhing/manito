@@ -1,6 +1,6 @@
 package com.youth.manito.service;
 
-import com.youth.manito.controller.dto.ManitoResultResponse;
+import com.youth.manito.controller.dto.ManitoResponse;
 import com.youth.manito.controller.dto.VoteManitoRequest;
 import com.youth.manito.domain.entity.ManitoGroup;
 import com.youth.manito.domain.entity.Team;
@@ -77,10 +77,10 @@ public class ManitoGroupService {
         }
     }
 
-    public ManitoResultResponse getManitoResults(final Long teamId, final Long receiverId) {
+    public ManitoResponse getManito(final Long teamId, final Long receiverId) {
         Team team = teamReader.getById(teamId);
         User receiver = userReader.getById(receiverId);
 
-        return ManitoResultResponse.from(manitoReader.getByTeamAndReceiver(team, receiver));
+        return ManitoResponse.from(manitoReader.getByTeamAndReceiver(team, receiver));
     }
 }

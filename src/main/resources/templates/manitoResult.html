@@ -88,7 +88,7 @@
 
 <script>
     // API 호출: /api/teams/{teamId}/manito-groups/vote/results?receiverId={receiverId}
-    fetch("/api/teams/" + teamId + "/manito-groups/vote/results?receiverId=" + receiverId)
+    fetch("/api/teams/" + teamId + "/manito-groups/manito?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
                 throw new Error("API 호출 실패");

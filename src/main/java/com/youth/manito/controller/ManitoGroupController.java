@@ -1,6 +1,6 @@
 package com.youth.manito.controller;
 
-import com.youth.manito.controller.dto.ManitoResultResponse;
+import com.youth.manito.controller.dto.ManitoResponse;
 import com.youth.manito.controller.dto.VoteManitoGroupRequest;
 import com.youth.manito.service.ManitoGroupService;
 import lombok.RequiredArgsConstructor;
@@ -27,8 +27,8 @@ public class ManitoGroupController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{teamId}/manito-groups/vote/results")
-    public ResponseEntity<ManitoResultResponse> getManitoResults(@PathVariable("teamId") Long teamId, @RequestParam("receiverId") Long receiverId) {
-        return ResponseEntity.ok().body(manitoGroupService.getManitoResults(teamId, receiverId));
+    @GetMapping("/{teamId}/manito-groups/manito")
+    public ResponseEntity<ManitoResponse> getManito(@PathVariable("teamId") Long teamId, @RequestParam("receiverId") Long receiverId) {
+        return ResponseEntity.ok().body(manitoGroupService.getManito(teamId, receiverId));
     }
 }
