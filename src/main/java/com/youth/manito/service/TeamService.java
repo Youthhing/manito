@@ -9,9 +9,11 @@ import com.youth.manito.domain.entity.User;
 import com.youth.manito.domain.repository.ManitoGroupRepository;
 import com.youth.manito.domain.repository.MissionRepository;
 import com.youth.manito.exception.BadRequestException;
+import com.youth.manito.service.component.EmailSender;
 import com.youth.manito.service.component.MissionReader;
 import com.youth.manito.service.component.TeamReader;
 import com.youth.manito.service.component.UserReader;
+import com.youth.manito.util.EmailUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +39,8 @@ public class TeamService {
 
     private final MissionRepository missionRepository;
 
+    private final EmailSender emailSender;
+
     public TeamResponse getByCode(final String code) {
         return TeamResponse.of(teamReader.getByCode(code));
     }
@@ -60,6 +64,8 @@ public class TeamService {
 
         missionRepository.saveAll(missions);
         manitoGroupRepository.save(manitoGroup);
+
+        manitos.forEach(manito -> emailSender.sendEmail(manito.getGiver(), EmailUtil.getMatchManitoMessageBody(manito) , EmailUtil.MATCH_MANITO_SUBJECT));
     }
 
     public Map<User, User> matchManito(final List<User> users) {
