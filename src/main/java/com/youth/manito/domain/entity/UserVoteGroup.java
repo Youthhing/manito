@@ -32,15 +32,20 @@ public class UserVoteGroup {
     @Column(name = "submitted", nullable = false)
     private boolean submitted;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manito_group_id")
+    private ManitoGroup manitoGroup;
+
     @OneToMany(mappedBy = "userVoteGroup", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<Vote> votes = new ArrayList<>();
 
-    private UserVoteGroup(User user) {
+    private UserVoteGroup(User user, ManitoGroup manitoGroup) {
         this.user = user;
+        this.manitoGroup = manitoGroup;
     }
 
-    public static UserVoteGroup from(User user) {
-        return new UserVoteGroup(user);
+    public static UserVoteGroup of(User user, ManitoGroup manitoGroup) {
+        return new UserVoteGroup(user, manitoGroup);
     }
 
     public List<Vote> getVotes() {

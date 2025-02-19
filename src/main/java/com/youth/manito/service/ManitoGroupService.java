@@ -1,6 +1,7 @@
 package com.youth.manito.service;
 
 import com.youth.manito.controller.dto.VoteManitoRequest;
+import com.youth.manito.domain.entity.ManitoGroup;
 import com.youth.manito.domain.entity.Team;
 import com.youth.manito.domain.entity.User;
 import com.youth.manito.domain.entity.UserVoteGroup;
@@ -37,7 +38,7 @@ public class ManitoGroupService {
         checkTeam(user, team);
 
         UserVoteGroup userVoteGroup = userVoteGroupRepository.findByUserId(userId)
-                .orElseGet(() -> userVoteGroupRepository.save(UserVoteGroup.from(user)));
+                .orElseGet(() -> userVoteGroupRepository.save(UserVoteGroup.of(user, ManitoGroup.of(team))));
 
         List<Long> userIds = voteRequest.stream()
                 .map(vote -> List.of(vote.giverId(), vote.receiverId()))
