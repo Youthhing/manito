@@ -2,6 +2,7 @@ package com.youth.manito.service;
 
 import com.youth.manito.controller.dto.ManitoResponse;
 import com.youth.manito.controller.dto.ManitoVoteResultResponse;
+import com.youth.manito.controller.dto.RevealRateResponse;
 import com.youth.manito.controller.dto.VoteManitoRequest;
 import com.youth.manito.domain.entity.ManitoGroup;
 import com.youth.manito.domain.entity.Team;
@@ -109,5 +110,19 @@ public class ManitoGroupService {
         votes.sort(Comparator.comparing(vote -> !vote.getUserVoteGroup().getUser().getId().equals(receiver.getId())));
 
         return ManitoVoteResultResponse.of(manitoGroup, receiver, votes);
+    }
+
+    public RevealRateResponse getRevealRate(final Long teamId, final Long receiverId) {
+        Team team = teamReader.getById(teamId);
+        User receiver = userReader.getById(receiverId);
+        ManitoGroup manitoGroup = manitoGroupReader.getByTeam(team);
+
+        List<UserVoteGroup> userVoteGroups = userVoteGroupRepository.findAllByManitoGroup(manitoGroup);
+        List<Vote> votes = voteReader.getAllByUserVoteGroups(userVoteGroups, receiver);
+
+        long totalVotes = votes.size();
+        long correctVotes = votes.stream().filter(Vote::isResult).count();
+
+        return RevealRateResponse.of(totalVotes, correctVotes);
     }
 }
