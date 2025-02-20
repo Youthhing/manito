@@ -37,6 +37,10 @@ public class Manito {
     @JoinColumn(name = "manito_group")
     private ManitoGroup manitoGroup;
 
+    private boolean giverOpen;
+
+    private boolean resultOpen;
+
     @Builder(access = AccessLevel.PRIVATE)
     private Manito(Mission mission, User giver, User receiver, ManitoGroup manitoGroup) {
         this.mission = mission;
