@@ -38,6 +38,33 @@
         .team-member a:hover {
             background-color: #0056b3;
         }
+        /* 버튼 그룹 스타일 */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .button-group button {
+            width: 48%;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+        }
+        .final-btn {
+            background-color: #28a745;
+        }
+        .final-btn:hover {
+            background-color: #218838;
+        }
+        .nunchi-btn {
+            background-color: #17a2b8;
+        }
+        .nunchi-btn:hover {
+            background-color: #138496;
+        }
     </style>
 </head>
 <body>
@@ -47,6 +74,11 @@
     <!-- 팀원 목록을 채울 컨테이너 -->
     <div id="teamMembersContainer">
         <!-- 예: 팀원 이름 : 결과 보러가기 -->
+    </div>
+    <!-- 버튼 그룹: 왼쪽은 최종 결과, 오른쪽은 눈치왕 보러가기 -->
+    <div class="button-group">
+        <button type="button" id="finalResultBtn" class="final-btn">최종 결과 보러가기</button>
+        <button type="button" id="nunchiBtn" class="nunchi-btn">눈치왕 보러가기</button>
     </div>
 </div>
 
@@ -64,7 +96,6 @@
             var container = document.getElementById("teamMembersContainer");
             // data.users는 팀원 배열 (각 팀원: { id, email, name, teamId })
             data.users.forEach(function(user) {
-                // 팀원 한 명에 대한 행 생성
                 var memberDiv = document.createElement("div");
                 memberDiv.className = "team-member";
 
@@ -72,21 +103,29 @@
                 var nameSpan = document.createElement("span");
                 nameSpan.textContent = user.name;
 
-                // "결과 보러가기" 링크 생성
-                // (여기서는 예시로 /vote/result/detail?userId=... 로 연결)
+                // "결과 보러가기" 링크 생성 (예: /manito/result/receiver/{user.id})
                 var resultLink = document.createElement("a");
                 resultLink.href = "/manito/result/receiver/" + user.id;
                 resultLink.textContent = "결과 보러가기";
 
                 memberDiv.appendChild(nameSpan);
                 memberDiv.appendChild(resultLink);
-
                 container.appendChild(memberDiv);
             });
         })
         .catch(function(error) {
             console.error("팀원 목록을 불러오는 중 오류 발생:", error);
         });
+
+    // 버튼 클릭 이벤트 처리 예시 (추후 이동 URL 수정)
+    document.getElementById("finalResultBtn").addEventListener("click", function() {
+        // 최종 결과 페이지로 이동 예시 (teamId를 쿼리 파라미터 등 추가할 수 있음)
+        window.location.href = "/finalResult?teamId=" + teamId;
+    });
+    document.getElementById("nunchiBtn").addEventListener("click", function() {
+        // 눈치왕 페이지로 이동 예시 (teamId를 쿼리 파라미터 등 추가할 수 있음)
+        window.location.href = "/nunchiResult?teamId=" + teamId;
+    });
 </script>
 </body>
 </html>
