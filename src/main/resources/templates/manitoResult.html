@@ -77,6 +77,22 @@
         .back-button button:hover {
             background-color: #5a6268;
         }
+        /* toggle 버튼 스타일 */
+        .toggle-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: 2px solid #28a745;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #28a745;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .toggle-button.clicked {
+            background-color: #28a745;
+            color: #fff;
+        }
         /* 반응형 스타일 */
         @media (max-width: 600px) {
             h1 { font-size: 20px; }
@@ -92,7 +108,11 @@
     <div class="result-header">
         <p>
             <span id="receiverName">[receiver]</span>님의 마니또는
-            <strong id="giverName">[giver]</strong> 입니다.
+            <!-- giver 부분을 toggle 버튼으로 변경 -->
+            <button id="giverName" class="toggle-button">
+                n명 이상이 누르면 공개
+            </button>
+            입니다.
         </p>
     </div>
     <!-- 미션 내용 영역 -->
@@ -129,6 +149,9 @@
 </script>
 
 <script>
+    // 실제 giver의 이름을 저장할 변수 (vote API에서 받아옴)
+    var actualGiverName = null;
+
     // API 호출: 매칭 결과 API
     fetch("/api/teams/" + teamId + "/manito-groups/manito?receiverId=" + receiverId)
         .then(function(response) {
@@ -137,12 +160,16 @@
             }
             return response.json();
         })
-        .then(function (result) {
+        .then(function(result) {
             document.getElementById("receiverName").innerText = result.receiverName;
-            document.getElementById("giverName").innerText = result.giverName;
+            // 만약 vote 결과 API가 없는 경우 이 API의 giverName 사용
+            if (!actualGiverName) {
+                actualGiverName = result.giverName;
+            }
+            // 기본 상태는 토글 버튼의 기본 텍스트를 유지함.
             document.getElementById("missionContent").innerText = result.missionContent;
         })
-        .catch(function (error) {
+        .catch(function(error) {
             console.error("매칭 결과 API 호출 중 오류:", error);
         });
 
@@ -158,10 +185,12 @@
             document.getElementById("pageTitle").innerText = result.receiverName + "님의 투표 결과 상세보기";
             document.getElementById("receiverName").innerText = result.receiverName;
             if (result.votes && result.votes.length > 0) {
-                document.getElementById("giverName").innerText = result.votes[0].giver.userName;
+                actualGiverName = result.votes[0].giver.userName;
             } else {
-                document.getElementById("giverName").innerText = "[없음]";
+                actualGiverName = "[없음]";
             }
+            // 초기 상태는 기본 텍스트
+            document.getElementById("giverName").innerText = "n명 이상이 누르면 공개";
             var voteList = document.getElementById("voteList");
             result.votes.forEach(function(vote) {
                 var li = document.createElement("li");
@@ -193,6 +222,19 @@
     // 뒤로가기 버튼 클릭 이벤트
     document.getElementById("backBtn").addEventListener("click", function() {
         window.history.back();
+    });
+
+    // giverName 버튼 클릭 이벤트: 토글 동작
+    var giverButton = document.getElementById("giverName");
+    giverButton.addEventListener("click", function() {
+        if (giverButton.classList.contains("clicked")) {
+            giverButton.classList.remove("clicked");
+            giverButton.innerText = "n명 이상이 누르면 공개";
+        } else {
+            giverButton.classList.add("clicked");
+            // 클릭된 상태일 때 실제 giver의 이름(또는 "공개됨" 메시지로 설정 가능)
+            giverButton.innerText = "공개됨";
+        }
     });
 </script>
 </body>
