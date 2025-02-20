@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>눈치왕 결과</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f0f0f0;
+            font-size: 18px;
+            color: #333;
+        }
+        td {
+            font-size: 16px;
+            color: #555;
+        }
+        @media (max-width: 600px) {
+            h1 { font-size: 20px; }
+            th, td { padding: 8px; font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>눈치왕 결과</h1>
+    <table id="resultTable">
+        <thead>
+        <tr>
+            <th>이름</th>
+            <th>정답률</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- API 결과로 행이 동적으로 추가됩니다 -->
+        </tbody>
+    </table>
+</div>
+
+<!-- Thymeleaf 인라인 스크립트를 통해 teamId를 자바스크립트 변수에 설정 -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var teamId = /*[[${team.id}]]*/ 0;
+    /*]]>*/
+</script>
+
+<script>
+    // API 호출: /api/teams/{teamId}/manito-groups/vote/results/sense-king
+    fetch("/api/teams/" + teamId + "/manito-groups/vote/results/sense-king")
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error("API 호출 실패");
+            }
+            return response.json();
+        })
+        .then(function(result) {
+            // result는 UserVoteResultsResponse 형태로, results 배열에 각 UserVoteResultResponse가 있음.
+            var tbody = document.querySelector("#resultTable tbody");
+            result.results.forEach(function(item) {
+                var tr = document.createElement("tr");
+                var tdName = document.createElement("td");
+                tdName.innerText = item.userName;
+                var tdRate = document.createElement("td");
+                tdRate.innerText = item.correctCount + "/" + item.totalCount;
+                tr.appendChild(tdName);
+                tr.appendChild(tdRate);
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(function(error) {
+            console.error("눈치왕 결과 API 호출 중 오류:", error);
+        });
+</script>
+</body>
+</html>

@@ -47,4 +47,10 @@ public class ViewController {
         model.addAttribute("user", userService.getById(receiverId));
         return "manitoResult";
     }
+
+    @GetMapping("/manito/result/sense-king")
+    public String senseKing(@RequestParam("teamId") Long teamId, Model model) {
+        model.addAttribute("team", teamService.getById(teamId));
+        return "senseKing";
+    }
 }
