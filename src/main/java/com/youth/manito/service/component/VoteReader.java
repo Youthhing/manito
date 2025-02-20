@@ -22,4 +22,11 @@ public class VoteReader {
                 .toList();
         return voteRepository.findAllByUserVoteGroupIdInAndReceiver(userVoteGroupIds, receiver);
     }
+
+    public List<Vote> getAllByUserVoteGroups(List<UserVoteGroup> userVoteGroups) {
+        List<Long> userVoteGroupIds = userVoteGroups.stream()
+                .map(UserVoteGroup::getId)
+                .toList();
+        return voteRepository.findAllByUserVoteGroupIdIn(userVoteGroupIds);
+    }
 }
