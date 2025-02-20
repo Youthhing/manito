@@ -16,7 +16,7 @@ public class VoteReader {
     private final VoteRepository voteRepository;
 
     @Transactional(readOnly = true)
-    public List<Vote> getAllByUserVoteGroups(final List<UserVoteGroup> userVoteGroups, final User receiver) {
+    public List<Vote> getAllByUserVoteGroupsAndReceiver(final List<UserVoteGroup> userVoteGroups, final User receiver) {
         List<Long> userVoteGroupIds = userVoteGroups.stream()
                 .map(UserVoteGroup::getId)
                 .toList();
