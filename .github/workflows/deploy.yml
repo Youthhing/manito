@@ -1,0 +1,92 @@
+name: DOCKER-DEPLOY
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PROJECT_NAME: MANITO-COTATO
+  RESOURCE_PATH: ./src/main/resources/application.yml
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # [0] JDK 세팅
+      - uses: actions/checkout@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      # [1] Set up Yaml File
+      - name: Set up Yaml File
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: ${{ env.RESOURCE_PATH }}
+        env:
+          spring.datasource.url: ${{ secrets.DB_PATH }}
+          spring.datasource.username: ${{ secrets.DB_USERNAME }}
+          spring.datasource.password: ${{ secrets.DB_PASSWORD }}
+          spring.jpa.hibernate.ddl-auto: ${{ secrets.DDL_AUTO }}
+          spring.mail.username: ${{ secrets.SENDER_EMAIL }}
+          spring.mail.password: ${{ secrets.SENDER_PASSWORD }}
+          vote.link: ${{ secrets.VOTE_LINK }}
+
+      # [2] 실행 권한 부여
+      - name: Grant permission for gradlew
+        run: chmod +x ./gradlew
+        shell: bash
+
+      # [3] 프로젝트 빌드
+      - name: Build with Gradle Wrapper
+        run: ./gradlew build
+
+      # [3] - 1 생성된 jar 파일 이름 변경
+      - name: Rename JAR file
+        run: mv build/libs/*.jar build/libs/team2-prod-0.0.1-SNAPSHOT.jar
+        shell: bash
+
+      # [4] docker image build
+      - name: docker image build
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/manito-cotato:1.0.2 .
+
+      # [5] docker hub login
+      - name: docker hub login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_EMAIL }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      # [6] docker hub push
+      - name: docker Hub push
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/manito-cotato:1.0.2
+
+      # [7] Docker Compose 파일을 서버로 전달한다.
+      - name: Copy docker-compose.yml to server
+        uses: appleboy/scp-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_PEM_KEY }}
+          port: 22
+          source: ./docker-compose.yml
+          target: /home/${{ secrets.SERVER_USER }}/manito
+
+      # [8] 서버에 배포한다.
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_PEM_KEY }}
+          port: 22
+          script: |
+            cd /home/ubuntu/manito
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/manito-cotato:1.0.2
+            docker-compose down
+            docker-compose pull
+            docker-compose up -d
+            docker image prune -f
