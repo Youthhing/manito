@@ -42,3 +42,5 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+// JAR 파일 생성 비활성화
+tasks.jar.enabled = false
