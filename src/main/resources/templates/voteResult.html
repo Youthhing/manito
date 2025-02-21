@@ -32,12 +32,10 @@
         .team-member:last-child {
             border-bottom: none;
         }
-        /* 좌측: 팀원 이름 */
         .member-left {
             font-size: 16px;
             color: #333;
         }
-        /* 우측: 토글 버튼 + 결과 보러가기 링크 */
         .member-right {
             display: flex;
             align-items: center;
@@ -54,7 +52,6 @@
         .member-right a:hover {
             background-color: #0056b3;
         }
-        /* 토글 버튼 스타일 */
         .toggle-button {
             padding: 8px 12px;
             font-size: 14px;
@@ -69,7 +66,6 @@
             background-color: #28a745;
             color: #fff;
         }
-        /* 버튼 그룹 스타일 (하단) */
         .button-group {
             display: flex;
             justify-content: space-between;
@@ -83,6 +79,12 @@
             border-radius: 4px;
             cursor: pointer;
             color: #fff;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .button-group button.active {
+            opacity: 1;
+            pointer-events: auto;
         }
         .final-btn {
             background-color: #28a745;
@@ -104,20 +106,14 @@
 </head>
 <body>
 <div class="container">
-    <!-- 팀 이름을 제목에 표시 -->
     <h1 id="pageTitle" th:text="${team.name} + ' 투표 결과'">투표 결과</h1>
-    <!-- 팀원 목록을 채울 컨테이너 -->
-    <div id="teamMembersContainer">
-        <!-- 각 팀원 행이 동적으로 추가됩니다. -->
-    </div>
-    <!-- 버튼 그룹: 왼쪽은 최종 결과, 오른쪽은 눈치왕 보러가기 -->
+    <div id="teamMembersContainer"></div>
     <div class="button-group">
         <button type="button" id="finalResultBtn" class="final-btn">최종 결과 보러가기</button>
         <button type="button" id="nunchiBtn" class="nunchi-btn">눈치왕 보러가기</button>
     </div>
 </div>
 
-<!-- Thymeleaf 인라인 스크립트를 통해 팀 id, receiver id, 관리자 여부를 설정 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     var teamId = /*[[${team.id}]]*/ 0;
@@ -126,43 +122,51 @@
     /*]]>*/
 </script>
 <script>
-    // API 호출: /api/teams/{teamId}/manito-group/manito/receivers?userId={receiverId}
-    fetch("/api/teams/" + teamId + "/manito-group/manito/receivers?userId=" + receiverId)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error("API 호출 실패");
+    function checkAllGiverOpen() {
+        let allOpen = true;
+        document.querySelectorAll(".member-right a").forEach(link => {
+            if (link.style.pointerEvents === "none") {
+                allOpen = false;
             }
-            return response.json();
-        })
+        });
+
+        let finalResultBtn = document.getElementById("finalResultBtn");
+        let nunchiBtn = document.getElementById("nunchiBtn");
+
+        if (allOpen) {
+            finalResultBtn.classList.add("active");
+            nunchiBtn.classList.add("active");
+        } else {
+            finalResultBtn.classList.remove("active");
+            nunchiBtn.classList.remove("active");
+        }
+    }
+
+    fetch("/api/teams/" + teamId + "/manito-group/manito/receivers?userId=" + receiverId)
+        .then(response => response.json())
         .then(function(data) {
-            // data: ManitosResponse { teamId, teamName, manitos: [ ManitoResponse, ... ] }
             document.getElementById("pageTitle").innerText = data.teamName + " 투표 결과";
             var container = document.getElementById("teamMembersContainer");
+
             data.manitos.forEach(function(manito) {
                 var memberDiv = document.createElement("div");
                 memberDiv.className = "team-member";
 
-                // 좌측: receiverName
                 var leftDiv = document.createElement("div");
                 leftDiv.className = "member-left";
                 leftDiv.innerText = manito.receiverName;
 
-                // 우측: 토글 버튼 (if admin) + 결과 보러가기 링크
                 var rightDiv = document.createElement("div");
                 rightDiv.className = "member-right";
 
-                // 결과 보러가기 링크 생성
                 var resultLink = document.createElement("a");
                 resultLink.textContent = "결과 보러가기";
 
-                // isGiverOpen 상태에 따라 링크 활성/비활성 처리
                 if (manito.isGiverOpen) {
                     resultLink.href = "/manito/result/receiver/" + manito.receiverId;
                     resultLink.style.pointerEvents = "auto";
                     resultLink.style.opacity = "1";
                 } else {
-                    // 비활성화
-                    resultLink.removeAttribute("href");
                     resultLink.style.pointerEvents = "none";
                     resultLink.style.opacity = "0.5";
                 }
@@ -170,66 +174,61 @@
                 if (isAdmin) {
                     var toggleButton = document.createElement("button");
                     toggleButton.className = "toggle-button";
-                    // 초기 텍스트는 isGiverOpen 상태에 따라
                     toggleButton.innerText = manito.isGiverOpen ? "공개됨" : "공개하기";
-                    // 토글 버튼에 manitoId 저장
                     toggleButton.setAttribute("data-manito-id", manito.manitoId);
-                    // 토글 버튼 클릭 이벤트: API 호출로 상태 업데이트 후, 버튼 및 링크 업데이트
+
                     toggleButton.addEventListener("click", function() {
                         var manitoId = toggleButton.getAttribute("data-manito-id");
-                        var newStatus = toggleButton.classList.contains("clicked") ? false : true;
+                        var newStatus = !toggleButton.classList.contains("clicked");
+
                         fetch("/api/teams/" + teamId + "/manito-group/manito/" + manitoId + "?userId=" + receiverId, {
                             method: "PUT",
                             headers: {
                                 "Content-Type": "application/json"
                             },
-                            body: JSON.stringify({giverOpen: newStatus})
+                            body: JSON.stringify({ giverOpen: newStatus })
                         })
-                            .then(function(response) {
-                                if (!response.ok) {
-                                    throw new Error("토글 API 호출 실패");
-                                }
-                                return response.text();
-                            })
-                            .then(function() {
-                                if (toggleButton.classList.contains("clicked")) {
-                                    toggleButton.classList.remove("clicked");
-                                    toggleButton.innerText = "공개하기";
-                                    resultLink.removeAttribute("href");
-                                    resultLink.style.pointerEvents = "none";
-                                    resultLink.style.opacity = "0.5";
-                                } else {
-                                    toggleButton.classList.add("clicked");
-                                    toggleButton.innerText = "비공개 하기";
+                            .then(response => response.text())
+                            .then(() => {
+                                toggleButton.classList.toggle("clicked");
+                                toggleButton.innerText = newStatus ? "비공개 하기" : "공개하기";
+
+                                if (newStatus) {
                                     resultLink.href = "/manito/result/receiver/" + manito.receiverId;
                                     resultLink.style.pointerEvents = "auto";
                                     resultLink.style.opacity = "1";
+                                } else {
+                                    resultLink.removeAttribute("href");
+                                    resultLink.style.pointerEvents = "none";
+                                    resultLink.style.opacity = "0.5";
                                 }
-                            })
-                            .catch(function(error) {
-                                console.error("토글 API 호출 중 오류:", error);
+
+                                checkAllGiverOpen();
                             });
                     });
+
                     rightDiv.appendChild(toggleButton);
                 }
 
                 rightDiv.appendChild(resultLink);
-
                 memberDiv.appendChild(leftDiv);
                 memberDiv.appendChild(rightDiv);
                 container.appendChild(memberDiv);
             });
-        })
-        .catch(function(error) {
-            console.error("새 API 호출 중 오류:", error);
+
+            checkAllGiverOpen();
         });
 
-    // 하단 버튼 이벤트 처리
     document.getElementById("finalResultBtn").addEventListener("click", function() {
-        window.location.href = "/finalResult?teamId=" + teamId;
+        if (this.classList.contains("active")) {
+            window.location.href = "/finalResult?teamId=" + teamId;
+        }
     });
+
     document.getElementById("nunchiBtn").addEventListener("click", function() {
-        window.location.href = "/manito/result/sense-king?teamId=" + teamId;
+        if (this.classList.contains("active")) {
+            window.location.href = "/manito/result/sense-king?teamId=" + teamId;
+        }
     });
 </script>
 </body>
