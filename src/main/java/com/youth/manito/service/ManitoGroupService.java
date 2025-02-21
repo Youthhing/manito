@@ -1,12 +1,16 @@
 package com.youth.manito.service;
 
+import com.youth.manito.controller.dto.FinalResultResponse;
 import com.youth.manito.controller.dto.ManitoResponse;
 import com.youth.manito.controller.dto.ManitoVoteResultResponse;
+import com.youth.manito.controller.dto.ResultResponse;
 import com.youth.manito.controller.dto.RevealRateResponse;
 import com.youth.manito.controller.dto.UserVoteResultResponse;
 import com.youth.manito.controller.dto.UserVoteResultsResponse;
 import com.youth.manito.controller.dto.VoteManitoRequest;
+import com.youth.manito.domain.entity.Manito;
 import com.youth.manito.domain.entity.ManitoGroup;
+import com.youth.manito.domain.entity.ResultVote;
 import com.youth.manito.domain.entity.Team;
 import com.youth.manito.domain.entity.User;
 import com.youth.manito.domain.entity.UserVoteGroup;
@@ -17,6 +21,7 @@ import com.youth.manito.domain.repository.VoteRepository;
 import com.youth.manito.exception.BadRequestException;
 import com.youth.manito.service.component.ManitoGroupReader;
 import com.youth.manito.service.component.ManitoReader;
+import com.youth.manito.service.component.ResultVoteReader;
 import com.youth.manito.service.component.TeamReader;
 import com.youth.manito.service.component.UserReader;
 import com.youth.manito.service.component.VoteChecker;
@@ -51,6 +56,8 @@ public class ManitoGroupService {
     private final VoteRepository voteRepository;
 
     private final ManitoGroupRepository manitoGroupRepository;
+
+    private final ResultVoteReader resultVoteReader;
 
     @Transactional
     public void voteManitoResults(final Long teamId, final Long userId, final boolean submitted, final List<VoteManitoRequest> voteRequest) {
@@ -146,5 +153,25 @@ public class ManitoGroupService {
                 .toList();
 
         return UserVoteResultsResponse.of(team, userVoteResultResponses);
+    }
+
+    public FinalResultResponse getFinalResults(final Long teamId) {
+        Team team = teamReader.getById(teamId);
+        ManitoGroup manitoGroup = manitoGroupReader.getByTeam(team);
+
+        List<Manito> manitos = manitoReader.getByManitoGroup(manitoGroup);
+        Map<Manito, List<ResultVote>> votesByManito = resultVoteReader.getAllByManitos(manitos).stream()
+                .collect(Collectors.groupingBy(ResultVote::getManito));
+
+        List<ResultResponse> resultResponses = votesByManito.entrySet().stream()
+                .map(entry -> {
+                    Manito manito = entry.getKey();
+                    List<ResultVote> votes = entry.getValue();
+                    long totalVotes = votes.size();
+                    long missionAgreeCount = votes.stream().filter(ResultVote::getAgree).count();
+                    return ResultResponse.of(manito.getReceiver(), manito.getGiver(), missionAgreeCount, totalVotes);
+                })
+                .toList();
+        return FinalResultResponse.of(team, manitoGroup, resultResponses);
     }
 }

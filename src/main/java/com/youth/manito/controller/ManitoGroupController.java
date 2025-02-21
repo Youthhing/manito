@@ -1,5 +1,6 @@
 package com.youth.manito.controller;
 
+import com.youth.manito.controller.dto.FinalResultResponse;
 import com.youth.manito.controller.dto.ManitoResponse;
 import com.youth.manito.controller.dto.ManitoVoteResultResponse;
 import com.youth.manito.controller.dto.RevealRateResponse;
@@ -48,5 +49,10 @@ public class ManitoGroupController {
     @GetMapping("/{teamId}/manito-groups/vote/results/sense-king")
     public ResponseEntity<UserVoteResultsResponse> getSenseKing(@PathVariable("teamId") Long teamId) {
         return ResponseEntity.ok().body(manitoGroupService.getSenseKingResults(teamId));
+    }
+
+    @GetMapping("/{teamId}/manito-groups/vote/results/final")
+    public ResponseEntity<FinalResultResponse> getFinalResults(@PathVariable("teamId") Long teamId) {
+        return ResponseEntity.ok().body(manitoGroupService.getFinalResults(teamId));
     }
 }
