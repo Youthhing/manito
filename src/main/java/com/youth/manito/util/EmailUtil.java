@@ -51,7 +51,8 @@ public class EmailUtil {
                 + "        </div>\n"
                 + "        <br>\n"
                 + "        <div class=\"button-container\">\n"
-                + "            <a href=\"" + voteLink + "/result?teamId=" + manito.getManitoGroup().getTeam().getId()
+                + "            <a href=\"" + voteLink + "/result?teamId=" + manito.getManitoGroup().getTeam().getId() + "&email=" + manito.getGiver().getEmail()
+                + "&sessionKey=" + manito.getGiver().getSessionKey()
                 + "\" class=\"button\">투표 결과 보러가기</a>\n"
                 + "        </div>\n"
                 + "    </div>\n"
@@ -59,5 +60,4 @@ public class EmailUtil {
                 + "</body>\n"
                 + "</html>";
     }
-
 }

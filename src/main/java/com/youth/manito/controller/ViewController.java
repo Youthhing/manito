@@ -37,8 +37,10 @@ public class ViewController {
     }
 
     @GetMapping("/vote/result")
-    public String voteResult(@RequestParam("teamId") Long teamId, Model model) {
+    public String voteResult(@RequestParam("teamId") Long teamId, @RequestParam("email") String email,
+                             @RequestParam("sessionKey") String sessionKey, Model model) {
         model.addAttribute("team", teamService.getById(teamId));
+        model.addAttribute("user", userService.getByEmailAndKey(email, sessionKey));
         return "voteResult";
     }
 
