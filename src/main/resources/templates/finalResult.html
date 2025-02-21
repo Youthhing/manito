@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>최종 투표 결과</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            text-align: center;
+            font-size: 18px;
+            margin-top: 20px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 id="pageTitle">최종 투표 결과</h1>
+
+    <div id="loadingMessage" class="loading">결과를 불러오는 중...</div>
+
+    <table id="resultTable" style="display: none;">
+        <thead>
+        <tr>
+            <th>이름(김감직)</th>
+            <th>감직이의 마니또</th>
+            <th>미션 인정 횟수</th>
+            <th>총 미션 횟수</th>
+        </tr>
+        </thead>
+        <tbody id="resultBody">
+        <!-- 동적으로 데이터 추가 -->
+        </tbody>
+    </table>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    var teamId = /*[[${team.id}]]*/ 0;
+    /*]]>*/
+
+    fetch(`/api/teams/${teamId}/manito-groups/vote/results/final`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("API 호출 실패");
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("pageTitle").innerText = data.teamName + " 최종 투표 결과";
+            var resultBody = document.getElementById("resultBody");
+
+            if (data.results.length === 0) {
+                document.getElementById("loadingMessage").innerText = "결과가 없습니다.";
+                return;
+            }
+
+            document.getElementById("loadingMessage").style.display = "none";
+            document.getElementById("resultTable").style.display = "table";
+
+            data.results.forEach(result => {
+                var row = document.createElement("tr");
+
+                var giverCell = document.createElement("td");
+                giverCell.textContent = result.giverName;
+
+                var receiverCell = document.createElement("td");
+                receiverCell.textContent = result.receiverName;
+
+                var missionAgreeCell = document.createElement("td");
+                missionAgreeCell.textContent = result.missionAgreeCount;
+
+                var denominatorCell = document.createElement("td");
+                denominatorCell.textContent = result.denominator;
+
+                row.appendChild(giverCell);
+                row.appendChild(receiverCell);
+                row.appendChild(missionAgreeCell);
+                row.appendChild(denominatorCell);
+                resultBody.appendChild(row);
+            });
+        })
+        .catch(error => {
+            console.error("API 호출 중 오류:", error);
+            document.getElementById("loadingMessage").innerText = "데이터를 불러오는 중 오류가 발생했습니다.";
+        });
+</script>
+</body>
+</html>

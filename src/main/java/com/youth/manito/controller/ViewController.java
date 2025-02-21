@@ -55,4 +55,10 @@ public class ViewController {
         model.addAttribute("team", teamService.getById(teamId));
         return "senseKing";
     }
+
+    @GetMapping("/finalResult")
+    public String finalResult(@RequestParam("teamId") Long teamId, Model model) {
+        model.addAttribute("team", teamService.getById(teamId));
+        return "finalResult";
+    }
 }
