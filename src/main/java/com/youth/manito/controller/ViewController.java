@@ -45,8 +45,11 @@ public class ViewController {
     }
 
     @GetMapping("/manito/result/receiver/{receiverId}")
-    public String user(@PathVariable("receiverId") Long receiverId, Model model) {
-        model.addAttribute("user", userService.getById(receiverId));
+    public String user(@PathVariable("receiverId") Long receiverId,
+                       @RequestParam("email") String email,
+                       @RequestParam("sessionKey") String sessionKey, Model model) {
+        model.addAttribute("receiver", userService.getById(receiverId));
+        model.addAttribute("user", userService.getByEmailAndKey(email, sessionKey));
         return "manitoResult";
     }
 

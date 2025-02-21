@@ -119,9 +119,10 @@
     var teamId = /*[[${team.id}]]*/ 0;
     var receiverId = /*[[${user.id}]]*/ 0;
     var isAdmin = /*[[${user.admin}]]*/ false;
+    var email = /*[[${user.email}]]*/ '';
+    var sessionKey = /*[[${user.sessionKey}]]*/ '';
     /*]]>*/
-</script>
-<script>
+
     function checkAllGiverOpen() {
         let allOpen = true;
         document.querySelectorAll(".member-right a").forEach(link => {
@@ -142,7 +143,7 @@
         }
     }
 
-    fetch("/api/teams/" + teamId + "/manito-group/manito/receivers?userId=" + receiverId)
+    fetch(`/api/teams/${teamId}/manito-group/manito/receivers?userId=${receiverId}`)
         .then(response => response.json())
         .then(function(data) {
             document.getElementById("pageTitle").innerText = data.teamName + " 투표 결과";
@@ -163,7 +164,7 @@
                 resultLink.textContent = "결과 보러가기";
 
                 if (manito.isGiverOpen) {
-                    resultLink.href = "/manito/result/receiver/" + manito.receiverId;
+                    resultLink.href = `/manito/result/receiver/${manito.receiverId}?email=${encodeURIComponent(email)}&sessionKey=${encodeURIComponent(sessionKey)}`;
                     resultLink.style.pointerEvents = "auto";
                     resultLink.style.opacity = "1";
                 } else {
@@ -179,22 +180,20 @@
 
                     toggleButton.addEventListener("click", function() {
                         var manitoId = toggleButton.getAttribute("data-manito-id");
-                        var newStatus = !toggleButton.classList.contains("clicked");
+                        var newStatus = !manito.isGiverOpen;
 
-                        fetch("/api/teams/" + teamId + "/manito-group/manito/" + manitoId + "?userId=" + receiverId, {
+                        fetch(`/api/teams/${teamId}/manito-group/manito/${manitoId}?userId=${receiverId}`, {
                             method: "PUT",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
+                            headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ giverOpen: newStatus })
                         })
-                            .then(response => response.text())
-                            .then(() => {
-                                toggleButton.classList.toggle("clicked");
-                                toggleButton.innerText = newStatus ? "비공개 하기" : "공개하기";
+                            .then(response => response.json())
+                            .then(updatedManito => {
+                                manito.isGiverOpen = updatedManito.giverOpen;
+                                toggleButton.innerText = manito.isGiverOpen ? "비공개 하기" : "공개하기";
 
-                                if (newStatus) {
-                                    resultLink.href = "/manito/result/receiver/" + manito.receiverId;
+                                if (manito.isGiverOpen) {
+                                    resultLink.href = `/manito/result/receiver/${manito.receiverId}?email=${encodeURIComponent(email)}&sessionKey=${encodeURIComponent(sessionKey)}`;
                                     resultLink.style.pointerEvents = "auto";
                                     resultLink.style.opacity = "1";
                                 } else {
@@ -219,17 +218,6 @@
             checkAllGiverOpen();
         });
 
-    document.getElementById("finalResultBtn").addEventListener("click", function() {
-        if (this.classList.contains("active")) {
-            window.location.href = "/finalResult?teamId=" + teamId;
-        }
-    });
-
-    document.getElementById("nunchiBtn").addEventListener("click", function() {
-        if (this.classList.contains("active")) {
-            window.location.href = "/manito/result/sense-king?teamId=" + teamId;
-        }
-    });
 </script>
 </body>
 </html>

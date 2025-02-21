@@ -79,7 +79,7 @@ public class ManitoService {
 
     private void checkAlreadyVoted(User user, Manito manito) {
         if (resultVoteRepository.existsByUserAndManito(user, manito)) {
-            throw new BadRequestException("already voted");
+            throw new BadRequestException("이미 인정하셨음 ㅋ");
         }
     }
 }

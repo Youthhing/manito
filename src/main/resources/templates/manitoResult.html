@@ -93,7 +93,6 @@
         .back-button button:hover {
             background-color: #5a6268;
         }
-        /* toggle 버튼 스타일 */
         .toggle-button {
             padding: 10px 20px;
             font-size: 16px;
@@ -101,7 +100,6 @@
             border-radius: 4px;
             background-color: #fff;
             color: #28a745;
-            text-decoration: none;
             cursor: pointer;
             transition: background-color 0.3s, color 0.3s;
         }
@@ -109,208 +107,101 @@
             background-color: #28a745;
             color: #fff;
         }
-        /* 버튼 그룹 스타일 (하단) */
-        .button-group {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-        .button-group button {
-            width: 48%;
-            padding: 10px;
-            font-size: 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #fff;
-        }
-        .final-btn {
-            background-color: #28a745;
-        }
-        .final-btn:hover {
-            background-color: #218838;
-        }
-        .nunchi-btn {
-            background-color: #17a2b8;
-        }
-        .nunchi-btn:hover {
-            background-color: #138496;
-        }
-        @media (max-width: 600px) {
-            h1 { font-size: 20px; }
-            .result-header p { font-size: 18px; }
-            .mission { font-size: 14px; padding: 8px; }
-        }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- 상단 매칭 결과 영역 -->
-    <h1 id="pageTitle" th:text="${team != null ? team.name : '팀 정보 없음'} + ' 투표 결과'">투표 결과 상세보기</h1>
+    <h1 id="pageTitle" th:text="${receiver != null ? receiver.name : '사용자 정보 없음'} + ' 투표 결과'">투표 결과 상세보기</h1>
     <div class="result-header">
         <p>
-            <span id="receiverName">[receiver]</span>님의 마니또는
-            <!-- giver 부분을 toggle 버튼으로 변경 -->
+            <span id="receiverName" th:text="${receiver.name}">[receiver]</span>님의 마니또는
             <button id="giverName" class="toggle-button">
                 n명 이상이 누르면 공개
             </button>
             입니다.
         </p>
     </div>
-    <!-- 미션 내용 영역 -->
     <div class="mission">
         <p>
             <strong>미션:</strong>
             <span id="missionContent">미션 내용이 추후 호출됩니다.</span>
         </p>
     </div>
-    <!-- '인정하기' 버튼 영역 -->
     <div class="vote-agree">
         <button type="button" id="voteAgreeBtn">인정하기</button>
     </div>
-    <!-- 투표 결과 목록 -->
     <div class="vote-results">
         <h2>투표 결과 보기</h2>
-        <p>모두가 본 결과를 보고 싶다.</p>
-        <ul class="vote-list" id="voteList">
-            <!-- 각 투표 결과 항목이 동적으로 추가됩니다. -->
-        </ul>
+        <ul class="vote-list" id="voteList"></ul>
     </div>
-    <!-- 들킴률 영역 -->
-    <div class="reveal-rate" id="revealRate">
-        <!-- JS에서 업데이트 -->
-    </div>
-    <!-- 뒤로가기 버튼 -->
+    <div class="reveal-rate" id="revealRate"></div>
     <div class="back-button">
         <button type="button" id="backBtn">뒤로가기</button>
     </div>
 </div>
 
-<!-- Thymeleaf 인라인 스크립트를 통해 팀, user 모델 데이터 설정 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
-    var teamId = /*[[${user.teamId}]]*/ 0;
-    var receiverId = /*[[${user.id}]]*/ 0;
-    var isAdmin = /*[[${user.admin}]]*/ false;
+    var teamId = /*[[${receiver.teamId}]]*/ 0;
+    var receiverId = /*[[${receiver.id}]]*/ 0;
     /*]]>*/
-</script>
-<script>
-    // 실제 giver의 이름과 manitoId를 저장할 변수
+
     var actualGiverName = null;
     var currentManitoId = null;
 
-    // API 호출: 매칭 결과 API
-    fetch("/api/teams/" + teamId + "/manito-groups/manito?receiverId=" + receiverId)
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error("API 호출 실패");
-            }
-            return response.json();
-        })
-        .then(function(result) {
+    fetch(`/api/teams/${teamId}/manito-groups/manito?receiverId=${receiverId}`)
+        .then(response => response.json())
+        .then(result => {
             document.getElementById("receiverName").innerText = result.receiverName;
-            if (result.giverName) {
-                actualGiverName = result.giverName;
-            }
-            currentManitoId = result.manitoId; // manitoId 저장
+            actualGiverName = result.giverName || "[없음]";
+            currentManitoId = result.manitoId;
             document.getElementById("missionContent").innerText = result.missionContent;
-        })
-        .catch(function(error) {
-            console.error("매칭 결과 API 호출 중 오류:", error);
         });
 
-    // API 호출: 투표 결과 API
-    fetch("/api/teams/" + teamId + "/manito-groups/vote/results?receiverId=" + receiverId)
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error("API 호출 실패");
-            }
-            return response.json();
-        })
-        .then(function(result) {
+    fetch(`/api/teams/${teamId}/manito-groups/vote/results?receiverId=${receiverId}`)
+        .then(response => response.json())
+        .then(result => {
             document.getElementById("pageTitle").innerText = result.receiverName + "님의 투표 결과 상세보기";
-            document.getElementById("receiverName").innerText = result.receiverName;
-            if (result.votes && result.votes.length > 0 && result.votes[0].giver && result.votes[0].giver.userName) {
-                actualGiverName = result.votes[0].giver.userName;
-            } else {
-                actualGiverName = "[없음]";
-            }
-            // 초기 상태는 기본 텍스트
-            document.getElementById("giverName").innerText = "n명 이상이 누르면 공개";
             var voteList = document.getElementById("voteList");
-            result.votes.forEach(function(vote) {
+            result.votes.forEach(vote => {
                 var li = document.createElement("li");
-                var giverName = (vote.giver && vote.giver.userName) ? vote.giver.userName : "[없음]";
-                li.innerText = vote.voterName + "(voter): " + result.receiverName + "의 마니또로 " + giverName + "를 선택했습니다.";
+                li.innerText = `${vote.voterName}(voter): ${result.receiverName}의 마니또로 ${vote.giver ? vote.giver.userName : "[없음]"}을 선택했습니다.`;
                 voteList.appendChild(li);
             });
-        })
-        .catch(function(error) {
-            console.error("투표 결과 API 호출 중 오류:", error);
         });
 
-    // API 호출: 들킴률 API
-    fetch("/api/teams/" + teamId + "/manito-groups/vote/revealRate?receiverId=" + receiverId)
-        .then(function(response) {
-            if (!response.ok) {
-                throw new Error("API 호출 실패");
-            }
-            return response.json();
-        })
-        .then(function(rate) {
-            document.getElementById("revealRate").innerText =
-                document.getElementById("giverName").innerText + "은 총 " + rate.denominator + " 중 " + rate.numerator +
-                " 명에게 " + document.getElementById("receiverName").innerText + "의 마니또임이 발각되었습니다.";
-        })
-        .catch(function(error) {
-            console.error("들킴률 API 호출 중 오류:", error);
+    fetch(`/api/teams/${teamId}/manito-groups/vote/revealRate?receiverId=${receiverId}`)
+        .then(response => response.json())
+        .then(rate => {
+            document.getElementById("revealRate").innerText = `${document.getElementById("receiverName").innerText}의 마니또는 총 ${rate.denominator} 중 ${rate.numerator} 명에게 발각되었습니다.`;
         });
 
-    // 뒤로가기 버튼 클릭 이벤트
     document.getElementById("backBtn").addEventListener("click", function() {
         window.history.back();
     });
 
-    // giverName 버튼 클릭 이벤트: 토글 동작 (실제 giverName을 보여줌)
-    var giverButton = document.getElementById("giverName");
-    giverButton.addEventListener("click", function() {
-        if (giverButton.classList.contains("clicked")) {
-            giverButton.classList.remove("clicked");
-            giverButton.innerText = "n명 이상이 누르면 공개";
+    document.getElementById("giverName").addEventListener("click", function() {
+        if (this.classList.contains("clicked")) {
+            this.classList.remove("clicked");
+            this.innerText = "n명 이상이 누르면 공개";
         } else {
-            giverButton.classList.add("clicked");
-            giverButton.innerText = actualGiverName;
+            this.classList.add("clicked");
+            this.innerText = actualGiverName;
         }
     });
 
-    // "인정하기" 버튼 클릭 이벤트: 결과 인정 API 호출 (POST)
     document.getElementById("voteAgreeBtn").addEventListener("click", function() {
         if (!currentManitoId) {
             console.error("현재 manitoId가 설정되지 않았습니다.");
             return;
         }
-        fetch("/api/teams/" + teamId + "/manito-group/manito/" + currentManitoId + "/result-vote?userId=" + receiverId, {
+        fetch(`/api/teams/${teamId}/manito-group/manito/${currentManitoId}/result-vote?userId=${receiverId}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ userId: receiverId, agree: true })
         })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        alert("에러 발생: " + (err.message || response.statusText));
-                        throw new Error("결과 인정 API 호출 실패: " + response.status);
-                    });
-                }
-                return response.text();
-            })
-            .then(function() {
-                alert("결과가 인정되었습니다.");
-            })
-            .catch(function(error) {
-                console.error("결과 인정 API 호출 중 오류:", error);
-            });
+            .then(response => response.text())
+            .then(() => alert("결과가 인정되었습니다."));
     });
 </script>
 </body>
