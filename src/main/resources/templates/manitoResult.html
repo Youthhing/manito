@@ -150,7 +150,7 @@
     <div class="result-header">
         <p>
             <span id="receiverName">[receiver]</span>님의 마니또는
-            <!-- giver 부분을 토글 버튼으로 변경 -->
+            <!-- giver 부분을 toggle 버튼으로 변경 -->
             <button id="giverName" class="toggle-button">
                 n명 이상이 누르면 공개
             </button>
@@ -164,7 +164,7 @@
             <span id="missionContent">미션 내용이 추후 호출됩니다.</span>
         </p>
     </div>
-    <!-- '인정하기' 버튼 영역 (투표 결과보기 위) -->
+    <!-- '인정하기' 버튼 영역 -->
     <div class="vote-agree">
         <button type="button" id="voteAgreeBtn">인정하기</button>
     </div>
@@ -212,14 +212,14 @@
             if (result.giverName) {
                 actualGiverName = result.giverName;
             }
-            currentManitoId = result.manitoId; // 현재 manitoId 저장
+            currentManitoId = result.manitoId; // manitoId 저장
             document.getElementById("missionContent").innerText = result.missionContent;
         })
         .catch(function(error) {
             console.error("매칭 결과 API 호출 중 오류:", error);
         });
 
-    // API 호출: 투표 결과 API (옵션, 추가 데이터 업데이트)
+    // API 호출: 투표 결과 API
     fetch("/api/teams/" + teamId + "/manito-groups/vote/results?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
@@ -271,7 +271,7 @@
         window.history.back();
     });
 
-    // giverName 버튼 클릭 이벤트: 토글 동작
+    // giverName 버튼 클릭 이벤트: 토글 동작 (실제 giverName을 보여줌)
     var giverButton = document.getElementById("giverName");
     giverButton.addEventListener("click", function() {
         if (giverButton.classList.contains("clicked")) {
@@ -279,18 +279,16 @@
             giverButton.innerText = "n명 이상이 누르면 공개";
         } else {
             giverButton.classList.add("clicked");
-            // 클릭 시, 실제 giver의 이름을 표시
             giverButton.innerText = actualGiverName;
         }
     });
 
-    // "인정하기" 버튼 클릭 이벤트: 아래 API 호출
+    // "인정하기" 버튼 클릭 이벤트: 결과 인정 API 호출 (POST)
     document.getElementById("voteAgreeBtn").addEventListener("click", function() {
         if (!currentManitoId) {
             console.error("현재 manitoId가 설정되지 않았습니다.");
             return;
         }
-        // POST 요청: 결과 인정 API 호출, agree: true로 전송
         fetch("/api/teams/" + teamId + "/manito-group/manito/" + currentManitoId + "/result-vote?userId=" + receiverId, {
             method: "POST",
             headers: {
@@ -300,7 +298,10 @@
         })
             .then(function(response) {
                 if (!response.ok) {
-                    throw new Error("결과 인정 API 호출 실패");
+                    return response.json().then(err => {
+                        alert("에러 발생: " + (err.message || response.statusText));
+                        throw new Error("결과 인정 API 호출 실패: " + response.status);
+                    });
                 }
                 return response.text();
             })
