@@ -37,6 +37,23 @@
             border-radius: 4px;
             background: #f0f0f0;
         }
+        .vote-agree {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .vote-agree button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ffc107;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+        .vote-agree button:hover {
+            background-color: #e0a800;
+        }
         .vote-results {
             margin-top: 20px;
         }
@@ -133,7 +150,7 @@
     <div class="result-header">
         <p>
             <span id="receiverName">[receiver]</span>님의 마니또는
-            <!-- giver 부분을 toggle 버튼으로 변경 -->
+            <!-- giver 부분을 토글 버튼으로 변경 -->
             <button id="giverName" class="toggle-button">
                 n명 이상이 누르면 공개
             </button>
@@ -146,6 +163,10 @@
             <strong>미션:</strong>
             <span id="missionContent">미션 내용이 추후 호출됩니다.</span>
         </p>
+    </div>
+    <!-- '인정하기' 버튼 영역 (투표 결과보기 위) -->
+    <div class="vote-agree">
+        <button type="button" id="voteAgreeBtn">인정하기</button>
     </div>
     <!-- 투표 결과 목록 -->
     <div class="vote-results">
@@ -165,7 +186,7 @@
     </div>
 </div>
 
-<!-- Thymeleaf 인라인 스크립트를 통해 team, user 모델 데이터 설정 -->
+<!-- Thymeleaf 인라인 스크립트를 통해 팀, user 모델 데이터 설정 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     var teamId = /*[[${user.teamId}]]*/ 0;
@@ -173,12 +194,12 @@
     var isAdmin = /*[[${user.admin}]]*/ false;
     /*]]>*/
 </script>
-
 <script>
-    // 실제 giver의 이름을 저장할 변수
+    // 실제 giver의 이름과 manitoId를 저장할 변수
     var actualGiverName = null;
+    var currentManitoId = null;
 
-    // API 호출: 매칭 결과 API (예: /api/teams/{teamId}/manito-groups/manito?receiverId={receiverId})
+    // API 호출: 매칭 결과 API
     fetch("/api/teams/" + teamId + "/manito-groups/manito?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
@@ -191,6 +212,7 @@
             if (result.giverName) {
                 actualGiverName = result.giverName;
             }
+            currentManitoId = result.manitoId; // 현재 manitoId 저장
             document.getElementById("missionContent").innerText = result.missionContent;
         })
         .catch(function(error) {
@@ -257,9 +279,37 @@
             giverButton.innerText = "n명 이상이 누르면 공개";
         } else {
             giverButton.classList.add("clicked");
-            // 클릭 시, 실제 giverName 값을 표시
+            // 클릭 시, 실제 giver의 이름을 표시
             giverButton.innerText = actualGiverName;
         }
+    });
+
+    // "인정하기" 버튼 클릭 이벤트: 아래 API 호출
+    document.getElementById("voteAgreeBtn").addEventListener("click", function() {
+        if (!currentManitoId) {
+            console.error("현재 manitoId가 설정되지 않았습니다.");
+            return;
+        }
+        // POST 요청: 결과 인정 API 호출, agree: true로 전송
+        fetch("/api/teams/" + teamId + "/manito-group/manito/" + currentManitoId + "/result-vote?userId=" + receiverId, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ userId: receiverId, agree: true })
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error("결과 인정 API 호출 실패");
+                }
+                return response.text();
+            })
+            .then(function() {
+                alert("결과가 인정되었습니다.");
+            })
+            .catch(function(error) {
+                console.error("결과 인정 API 호출 중 오류:", error);
+            });
     });
 </script>
 </body>

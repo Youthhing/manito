@@ -37,7 +37,7 @@ public class ManitoController {
 
     @PostMapping("/{manitoId}/result-vote")
     public ResponseEntity<Void> voteManito(@PathVariable("teamId") Long teamId,
-                                           @RequestParam("manitoId") Long manitoId,
+                                           @PathVariable("manitoId") Long manitoId,
                                            @RequestBody ResultVoteRequest request) {
         manitoService.resultVote(teamId, manitoId, request.userId(), request.agree());
         return ResponseEntity.ok().build();
