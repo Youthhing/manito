@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>투표 결과 상세보기</title>
-    <!-- 모바일 반응형 설정 -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -93,7 +92,33 @@
             background-color: #28a745;
             color: #fff;
         }
-        /* 반응형 스타일 */
+        /* 버튼 그룹 스타일 (하단) */
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .button-group button {
+            width: 48%;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+        }
+        .final-btn {
+            background-color: #28a745;
+        }
+        .final-btn:hover {
+            background-color: #218838;
+        }
+        .nunchi-btn {
+            background-color: #17a2b8;
+        }
+        .nunchi-btn:hover {
+            background-color: #138496;
+        }
         @media (max-width: 600px) {
             h1 { font-size: 20px; }
             .result-header p { font-size: 18px; }
@@ -104,7 +129,7 @@
 <body>
 <div class="container">
     <!-- 상단 매칭 결과 영역 -->
-    <h1 id="pageTitle">투표 결과 상세보기</h1>
+    <h1 id="pageTitle" th:text="${team != null ? team.name : '팀 정보 없음'} + ' 투표 결과'">투표 결과 상세보기</h1>
     <div class="result-header">
         <p>
             <span id="receiverName">[receiver]</span>님의 마니또는
@@ -140,19 +165,20 @@
     </div>
 </div>
 
-<!-- Thymeleaf 인라인 스크립트를 통해 teamId와 receiverId를 설정 -->
+<!-- Thymeleaf 인라인 스크립트를 통해 team, user 모델 데이터 설정 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     var teamId = /*[[${user.teamId}]]*/ 0;
     var receiverId = /*[[${user.id}]]*/ 0;
+    var isAdmin = /*[[${user.admin}]]*/ false;
     /*]]>*/
 </script>
 
 <script>
-    // 실제 giver의 이름을 저장할 변수 (vote API에서 받아옴)
+    // 실제 giver의 이름을 저장할 변수
     var actualGiverName = null;
 
-    // API 호출: 매칭 결과 API
+    // API 호출: 매칭 결과 API (예: /api/teams/{teamId}/manito-groups/manito?receiverId={receiverId})
     fetch("/api/teams/" + teamId + "/manito-groups/manito?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
@@ -162,18 +188,16 @@
         })
         .then(function(result) {
             document.getElementById("receiverName").innerText = result.receiverName;
-            // 만약 vote 결과 API가 없는 경우 이 API의 giverName 사용
-            if (!actualGiverName) {
+            if (result.giverName) {
                 actualGiverName = result.giverName;
             }
-            // 기본 상태는 토글 버튼의 기본 텍스트를 유지함.
             document.getElementById("missionContent").innerText = result.missionContent;
         })
         .catch(function(error) {
             console.error("매칭 결과 API 호출 중 오류:", error);
         });
 
-    // API 호출: 투표 결과 API
+    // API 호출: 투표 결과 API (옵션, 추가 데이터 업데이트)
     fetch("/api/teams/" + teamId + "/manito-groups/vote/results?receiverId=" + receiverId)
         .then(function(response) {
             if (!response.ok) {
@@ -184,7 +208,7 @@
         .then(function(result) {
             document.getElementById("pageTitle").innerText = result.receiverName + "님의 투표 결과 상세보기";
             document.getElementById("receiverName").innerText = result.receiverName;
-            if (result.votes && result.votes.length > 0) {
+            if (result.votes && result.votes.length > 0 && result.votes[0].giver && result.votes[0].giver.userName) {
                 actualGiverName = result.votes[0].giver.userName;
             } else {
                 actualGiverName = "[없음]";
@@ -194,7 +218,8 @@
             var voteList = document.getElementById("voteList");
             result.votes.forEach(function(vote) {
                 var li = document.createElement("li");
-                li.innerText = vote.voterName + "(voter): " + result.receiverName + "의 마니또로 " + vote.giver.userName + "를 선택했습니다.";
+                var giverName = (vote.giver && vote.giver.userName) ? vote.giver.userName : "[없음]";
+                li.innerText = vote.voterName + "(voter): " + result.receiverName + "의 마니또로 " + giverName + "를 선택했습니다.";
                 voteList.appendChild(li);
             });
         })
@@ -232,8 +257,8 @@
             giverButton.innerText = "n명 이상이 누르면 공개";
         } else {
             giverButton.classList.add("clicked");
-            // 클릭된 상태일 때 실제 giver의 이름(또는 "공개됨" 메시지로 설정 가능)
-            giverButton.innerText = "공개됨";
+            // 클릭 시, 실제 giverName 값을 표시
+            giverButton.innerText = actualGiverName;
         }
     });
 </script>
