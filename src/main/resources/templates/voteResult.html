@@ -28,17 +28,42 @@
         .team-member:last-child {
             border-bottom: none;
         }
-        .team-member a {
+        /* 좌측: 팀원 이름, 우측: 토글 버튼 + 결과 보러가기 링크 */
+        .member-left {
+            font-size: 16px;
+            color: #333;
+        }
+        .member-right {
+            display: flex;
+            align-items: center;
+        }
+        .member-right a {
             background-color: #007bff;
             color: white;
             padding: 5px 10px;
             border-radius: 4px;
             text-decoration: none;
+            margin-left: 8px;
         }
-        .team-member a:hover {
+        .member-right a:hover {
             background-color: #0056b3;
         }
-        /* 버튼 그룹 스타일 */
+        /* 토글 버튼 스타일 */
+        .toggle-button {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 2px solid #28a745;
+            border-radius: 4px;
+            background-color: #fff;
+            color: #28a745;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .toggle-button.clicked {
+            background-color: #28a745;
+            color: #fff;
+        }
+        /* 버튼 그룹 스타일 (하단) */
         .button-group {
             display: flex;
             justify-content: space-between;
@@ -73,7 +98,7 @@
     <h1 th:text="${team.name} + ' 투표 결과'">투표 결과</h1>
     <!-- 팀원 목록을 채울 컨테이너 -->
     <div id="teamMembersContainer">
-        <!-- 예: 팀원 이름 : 결과 보러가기 -->
+        <!-- 각 팀원 행이 동적으로 추가됩니다. -->
     </div>
     <!-- 버튼 그룹: 왼쪽은 최종 결과, 오른쪽은 눈치왕 보러가기 -->
     <div class="button-group">
@@ -82,10 +107,11 @@
     </div>
 </div>
 
-<!-- Thymeleaf 인라인 스크립트를 사용하여 팀 id를 자바스크립트 변수에 넣어줍니다 -->
+<!-- Thymeleaf 인라인 스크립트를 사용하여 팀 id와 관리자 여부를 자바스크립트 변수에 넣어줍니다 -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     var teamId = /*[[${team.id}]]*/ 0;
+    var isAdmin = /*[[${user.admin}]]*/ false;
     /*]]>*/
 </script>
 <script>
@@ -99,17 +125,38 @@
                 var memberDiv = document.createElement("div");
                 memberDiv.className = "team-member";
 
-                // 팀원 이름 표시
-                var nameSpan = document.createElement("span");
-                nameSpan.textContent = user.name;
+                // 왼쪽 영역: 팀원 이름
+                var leftDiv = document.createElement("div");
+                leftDiv.className = "member-left";
+                leftDiv.innerText = user.name;
 
-                // "결과 보러가기" 링크 생성 (예: /manito/result/receiver/{user.id})
+                // 오른쪽 영역: (관리자인 경우 토글 버튼) + "결과 보러가기" 링크
+                var rightDiv = document.createElement("div");
+                rightDiv.className = "member-right";
+
+                if (isAdmin) {
+                    var toggleButton = document.createElement("button");
+                    toggleButton.className = "toggle-button";
+                    toggleButton.innerText = "공개하기";
+                    toggleButton.addEventListener("click", function() {
+                        if (toggleButton.classList.contains("clicked")) {
+                            toggleButton.classList.remove("clicked");
+                            toggleButton.innerText = "공개하기";
+                        } else {
+                            toggleButton.classList.add("clicked");
+                            toggleButton.innerText = "비공개 하기";
+                        }
+                    });
+                    rightDiv.appendChild(toggleButton);
+                }
+
                 var resultLink = document.createElement("a");
                 resultLink.href = "/manito/result/receiver/" + user.id;
                 resultLink.textContent = "결과 보러가기";
+                rightDiv.appendChild(resultLink);
 
-                memberDiv.appendChild(nameSpan);
-                memberDiv.appendChild(resultLink);
+                memberDiv.appendChild(leftDiv);
+                memberDiv.appendChild(rightDiv);
                 container.appendChild(memberDiv);
             });
         })
@@ -117,13 +164,11 @@
             console.error("팀원 목록을 불러오는 중 오류 발생:", error);
         });
 
-    // 버튼 클릭 이벤트 처리 예시 (추후 이동 URL 수정)
+    // 버튼 클릭 이벤트 처리
     document.getElementById("finalResultBtn").addEventListener("click", function() {
-        // 최종 결과 페이지로 이동 예시 (teamId를 쿼리 파라미터 등 추가할 수 있음)
         window.location.href = "/finalResult?teamId=" + teamId;
     });
     document.getElementById("nunchiBtn").addEventListener("click", function() {
-        // 눈치왕 페이지로 이동 예시 (teamId를 쿼리 파라미터 등 추가할 수 있음)
         window.location.href = "/manito/result/sense-king?teamId=" + teamId;
     });
 </script>
