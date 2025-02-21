@@ -27,4 +27,9 @@ public class ManitoReader {
     public List<Manito> getByManitoGroup(final ManitoGroup manitoGroup) {
         return manitoRepository.findAllByManitoGroup(manitoGroup);
     }
+
+    public Manito getById(final Long manitoId) {
+        return manitoRepository.findById(manitoId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 매니또 정보가 없습니다."));
+    }
 }

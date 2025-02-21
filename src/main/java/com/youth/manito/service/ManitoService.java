@@ -14,6 +14,7 @@ import com.youth.manito.service.component.UserReader;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,4 +46,13 @@ public class ManitoService {
         return ManitosResponse.of(team, manitoResponses);
     }
 
+    @Transactional
+    public void resultOpen(final Long manitoId, final Long userId, final boolean giverOpen) {
+        User user = userReader.getById(userId);
+        if (!user.isAdmin()) {
+            throw new BadRequestException("user is not admin");
+        }
+        Manito manito = manitoReader.getById(manitoId);
+        manito.updateGiverOpen(giverOpen);
+    }
 }

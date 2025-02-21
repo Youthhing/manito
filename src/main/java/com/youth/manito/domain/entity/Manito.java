@@ -60,4 +60,8 @@ public class Manito {
     public void assignMission(final Mission mission) {
         this.mission = mission;
     }
+
+    public void updateGiverOpen(boolean open) {
+        this.giverOpen = open;
+    }
 }
