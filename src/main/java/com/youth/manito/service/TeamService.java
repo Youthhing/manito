@@ -16,10 +16,12 @@ import com.youth.manito.service.component.TeamReader;
 import com.youth.manito.service.component.UserReader;
 import com.youth.manito.util.EmailUtil;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -73,7 +75,15 @@ public class TeamService {
         manitoGroupRepository.save(manitoGroup);
         manitoRepository.saveAll(manitos);
 
-        manitos.forEach(manito -> emailSender.sendEmail(manito.getGiver(), EmailUtil.getMatchManitoMessageBody(manito, voteLink) , EmailUtil.MATCH_MANITO_SUBJECT));
+        Collection<CompletableFuture<Void>> tasks = new ArrayList<>();
+        manitos.forEach(manito -> {
+            CompletableFuture<Void> task = emailSender.sendEmail(manito.getGiver(),
+                    EmailUtil.getMatchManitoMessageBody(manito, voteLink),
+                    EmailUtil.MATCH_MANITO_SUBJECT);
+            tasks.add(task);
+        });
+
+        CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0])).join();
     }
 
     public Map<User, User> matchManito(final List<User> users) {

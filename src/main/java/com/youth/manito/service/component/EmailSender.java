@@ -6,9 +6,11 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import java.io.UnsupportedEncodingException;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -22,7 +24,8 @@ public class EmailSender {
 
     private final JavaMailSender mailSender;
 
-    public void sendEmail(final User recipient, String messageBody, String subject) {
+    @Async("emailSendThreadPoolExecutor")
+    public CompletableFuture<Void> sendEmail(final User recipient, String messageBody, String subject) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
 
@@ -35,6 +38,7 @@ public class EmailSender {
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     private InternetAddress getInternetAddress() {
